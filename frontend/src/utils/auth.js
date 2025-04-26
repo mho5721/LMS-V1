@@ -180,26 +180,31 @@ export const setAuthUser = (access_token, refresh_token) => {
 // CHANGES:
 // - Added checks to ensure that tokens are valid before setting them in cookies
 export const setAuthUser = (access_token, refresh_token) => {
-    if (access_token && refresh_token) {
-        Cookie.set("access_token", access_token, {
-            expires: 1,
-            secure: true,
-        });
+    if (!access_token || !refresh_token) {
+        console.error("Missing tokens, cannot set user.");
+        return;
+    }
 
-        Cookie.set("refresh_token", refresh_token, {
-            expires: 7,
-            secure: true,
-        });
+    Cookie.set("access_token", access_token, { expires: 1, secure: true });
+    Cookie.set("refresh_token", refresh_token, { expires: 7, secure: true });
+    localStorage.setItem("access_token", access_token);
+    localStorage.setItem("refresh_token", refresh_token);
 
-        const user = access_token ? jwt_decode(access_token) : null; // Ensure valid token is passed
+    try {
+        const user = jwt_decode(access_token);
         if (user) {
             useAuthStore.getState().setUser(user);
+            localStorage.setItem("user_id", user.user_id);
         }
-    } else {
-        console.error("Invalid tokens, could not set user.");
+    } catch (error) {
+        console.error("Failed to decode access token:", error);
+        logout(); // logout if decoding failed
     }
+
     useAuthStore.getState().setLoading(false);
 };
+
+
 
 // OLD CODE
 
@@ -247,11 +252,15 @@ export const isAccessTokenExpired = (access_token) => {
 
 // No changes needed here, but made sure that any error during decoding defaults to token expiration
 export const isAccessTokenExpired = (access_token) => {
+    if (!access_token) {
+        console.warn("Access token not found or empty.");
+        return true;
+    }
     try {
         const decodedToken = jwt_decode(access_token);
         return decodedToken.exp < Date.now() / 1000;
     } catch (error) {
         console.error("Error decoding token:", error);
-        return true; // Consider token expired if decoding fails
+        return true;
     }
 };

@@ -56,6 +56,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ProfileSerializer(serializers.ModelSerializer):
+    is_instructor = serializers.BooleanField(source="user.is_instructor", read_only=True)
     class Meta:
         model = Profile
         fields = "__all__"

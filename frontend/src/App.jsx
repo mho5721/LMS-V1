@@ -44,19 +44,21 @@ import CourseCreate from "./views/instructor/CourseCreate";
 import CourseEdit from "./views/instructor/CourseEdit";
 import CourseEditCurriculum from "./views/instructor/CourseEditCurriculum";
 
+import Redirector from "./views/auth/Redirector";
+
 function App() {
     const [cartCount, setCartCount] = useState(0);
     const [profile, setProfile] = useState([]);
 
-    useEffect(() => {
-        apiInstance.get(`course/cart-list/${CartId()}/`).then((res) => {
-            setCartCount(res.data?.length);
-        });
+useEffect(() => {
+  apiInstance.get(`course/cart-list/${CartId()}/`).then((res) => {
+    setCartCount(res.data?.length);
+  });
 
-        useAxios.get(`user/profile/${UserData()?.user_id}/`).then((res) => {
-            setProfile(res.data);
-        });
-    }, []);
+  useAxios.get(`user/profile/${UserData()?.user_id}/`).then((res) => {
+    setProfile(res.data);
+  });
+}, []);
 
     return (
         <CartContext.Provider value={[cartCount, setCartCount]}>
@@ -71,7 +73,7 @@ function App() {
                             <Route path="/create-new-password/" element={<CreateNewPassword />} />
 
                             {/* Base Routes */}
-                            <Route path="/" element={<Index />} />
+                            <Route path="/" element={<Redirector />} />
                             <Route path="/course-detail/:slug/" element={<CourseDetail />} />
                             <Route path="/cart/" element={<Cart />} />
                             <Route path="/checkout/:order_oid/" element={<Checkout />} />

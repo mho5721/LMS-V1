@@ -18,12 +18,12 @@ function Login() {
     setIsLoading(true);
     const { error } = await login(email, password);
     if (error) {
-      setIsLoading(false);
-      alert(error);
+    alert(error);
+    setIsLoading(false);
     } else {
-      navigate("/");
-      setIsLoading(false);
-    }
+    // Force full reload so ProfileContext is reloaded
+    window.location.href = "/";
+}
   };
 
   return (

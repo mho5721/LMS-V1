@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { setUser } from "../utils/auth";
+import FloatingChatbot from "../views/chatbot/FloatingChatbot";
 
 const MainWrapper = ({ children }) => {
   const [loading, setLoading] = useState(true);
@@ -16,7 +17,16 @@ const MainWrapper = ({ children }) => {
     handler();
   }, []);
 
-  return <>{loading ? null : children}</>;
+  return (
+    <>
+      {loading ? null : (
+        <>
+          {children}
+          <FloatingChatbot /> {/* <-- Add the chatbot HERE after children */}
+        </>
+      )}
+    </>
+  );
 };
 
 export default MainWrapper;
