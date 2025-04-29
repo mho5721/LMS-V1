@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 
 import BaseHeader from "../partials/BaseHeader";
-import BaseFooter from "../partials/BaseFooter";
+
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 
@@ -107,7 +107,7 @@ function ChangePassword() {
                 </div>
             </section>
 
-            <BaseFooter />
+
         </>
     );
 }

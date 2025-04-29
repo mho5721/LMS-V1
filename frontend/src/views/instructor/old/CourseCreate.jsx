@@ -5,7 +5,7 @@ import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import BaseHeader from "../partials/BaseHeader";
-import BaseFooter from "../partials/BaseFooter";
+
 import { Link, useNavigate } from "react-router-dom";
 
 import useAxios from "../../utils/useAxios";
@@ -295,7 +295,7 @@ function CourseCreate() {
                 </div>
             </section>
 
-            <BaseFooter />
+
         </>
     );
 }

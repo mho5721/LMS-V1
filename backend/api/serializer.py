@@ -320,3 +320,13 @@ class TeacherSummarySerializer(serializers.Serializer):
 
 class FileUploadSerializer(serializers.Serializer):
     file = serializers.FileField(required=True)
+    
+class CourseMaterialSerializer(serializers.ModelSerializer):
+    course = serializers.SlugRelatedField(
+        queryset=api_models.Course.objects.all(),
+        slug_field="course_id"  # 💡 important: use course_id, not id
+    )
+
+    class Meta:
+        model = api_models.CourseMaterial
+        fields = "__all__"

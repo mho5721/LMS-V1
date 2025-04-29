@@ -172,12 +172,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 JAZZMIN_SETTINGS  = {
-    "site_title": "Desphixs LMS Admin",
-    "site_header": "Desphixs LMS",
-    "site_brand": "Desphixs LMS",
+    "site_title": "EduCollab LMS Admin",
+    "site_header": "EduCollab LMS",
+    "site_brand": "EduCollab LMS",
     # "site_logo": "path-to-logo",
-    "welcome_sign": "Welcome to the Desphixs LMS",
-    "copyright": "Desphixs LMS Ltd",
+    "welcome_sign": "Welcome to the EduCollab LMS",
+    "copyright": "EduCollab LMS Ltd",
     "show_ui_builder": True,
 
 }

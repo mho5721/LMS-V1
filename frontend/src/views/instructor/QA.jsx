@@ -5,7 +5,7 @@ import Modal from "react-bootstrap/Modal";
 import moment from "moment";
 
 import BaseHeader from "../partials/BaseHeader";
-import BaseFooter from "../partials/BaseFooter";
+
 import { Link } from "react-router-dom";
 
 import useAxios from "../../utils/useAxios";
@@ -216,7 +216,7 @@ function QA() {
                 </Modal.Body>
             </Modal>
 
-            <BaseFooter />
+
         </>
     );
 }

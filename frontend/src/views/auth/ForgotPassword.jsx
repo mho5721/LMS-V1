@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import BaseHeader from "../partials/BaseHeader";
-import BaseFooter from "../partials/BaseFooter";
+
 import { Link } from "react-router-dom";
 import apiInstance from "../../utils/axios";
 function ForgotPassword() {
@@ -80,7 +80,7 @@ function ForgotPassword() {
         </div>
       </section>
 
-      <BaseFooter />
+
     </>
   );
 }

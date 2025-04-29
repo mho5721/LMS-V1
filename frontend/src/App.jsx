@@ -3,7 +3,6 @@ import { Route, Routes, BrowserRouter } from "react-router-dom";
 
 import { CartContext, ProfileContext } from "./views/plugin/Context";
 import apiInstance from "./utils/axios";
-import CartId from "./views/plugin/CartId";
 
 import MainWrapper from "./layouts/MainWrapper";
 import PrivateRoute from "./layouts/PrivateRoute";
@@ -14,28 +13,18 @@ import Logout from "./views/auth/Logout";
 import ForgotPassword from "./views/auth/ForgotPassword";
 import CreateNewPassword from "./views/auth/CreateNewPassword";
 
-import Index from "./views/base/Index";
 import CourseDetail from "./views/base/CourseDetail";
-import Cart from "./views/base/Cart";
-import Checkout from "./views/base/Checkout";
-import Success from "./views/base/Success";
-import Search from "./views/base/Search";
 
 import StudentDashboard from "./views/student/Dashboard";
 import StudentCourses from "./views/student/Courses";
 import StudentCourseDetail from "./views/student/CourseDetail";
-import Wishlist from "./views/student/Wishlist";
 import StudentProfile from "./views/student/Profile";
 import useAxios from "./utils/useAxios";
 import UserData from "./views/plugin/UserData";
 import StudentChangePassword from "./views/student/ChangePassword";
 import Dashboard from "./views/instructor/Dashboard";
 import Courses from "./views/instructor/Courses";
-import Review from "./views/instructor/Review";
 import Students from "./views/instructor/Students";
-import Earning from "./views/instructor/Earning";
-import Orders from "./views/instructor/Orders";
-import Coupon from "./views/instructor/Coupon";
 import TeacherNotification from "./views/instructor/TeacherNotification";
 import QA from "./views/instructor/QA";
 import ChangePassword from "./views/instructor/ChangePassword";
@@ -45,15 +34,12 @@ import CourseEdit from "./views/instructor/CourseEdit";
 import CourseEditCurriculum from "./views/instructor/CourseEditCurriculum";
 
 import Redirector from "./views/auth/Redirector";
+import ProtectedRoute from "./views/partials/ProtectedRoute";
 
 function App() {
-    const [cartCount, setCartCount] = useState(0);
     const [profile, setProfile] = useState([]);
 
 useEffect(() => {
-  apiInstance.get(`course/cart-list/${CartId()}/`).then((res) => {
-    setCartCount(res.data?.length);
-  });
 
   useAxios.get(`user/profile/${UserData()?.user_id}/`).then((res) => {
     setProfile(res.data);
@@ -61,7 +47,6 @@ useEffect(() => {
 }, []);
 
     return (
-        <CartContext.Provider value={[cartCount, setCartCount]}>
             <ProfileContext.Provider value={[profile, setProfile]}>
                 <BrowserRouter>
                     <MainWrapper>
@@ -75,188 +60,136 @@ useEffect(() => {
                             {/* Base Routes */}
                             <Route path="/" element={<Redirector />} />
                             <Route path="/course-detail/:slug/" element={<CourseDetail />} />
-                            <Route path="/cart/" element={<Cart />} />
-                            <Route path="/checkout/:order_oid/" element={<Checkout />} />
-                            <Route path="/payment-success/:order_oid/" element={<Success />} />
-                            <Route path="/search/" element={<Search />} />
 
                             {/* Student Routes */}
                             <Route
-                                path="/student/dashboard/"
-                                element={
-                                    <PrivateRoute>
-                                        <StudentDashboard />
-                                    </PrivateRoute>
-                                }
+                            path="/student/dashboard/"
+                            element={
+                                <ProtectedRoute allowedRole="student">
+                                <StudentDashboard />
+                                </ProtectedRoute>
+                            }
                             />
                             <Route
-                                path="/student/courses/"
-                                element={
-                                    <PrivateRoute>
-                                        <StudentCourses />
-                                    </PrivateRoute>
-                                }
+                            path="/student/courses/"
+                            element={
+                                <ProtectedRoute allowedRole="student">
+                                <StudentCourses />
+                                </ProtectedRoute>
+                            }
                             />
                             <Route
-                                path="/student/courses/:enrollment_id/"
-                                element={
-                                    <PrivateRoute>
-                                        <StudentCourseDetail />
-                                    </PrivateRoute>
-                                }
+                            path="/student/courses/:enrollment_id/"
+                            element={
+                                <ProtectedRoute allowedRole="student">
+                                <StudentCourseDetail />
+                                </ProtectedRoute>
+                            }
                             />
                             <Route
-                                path="/student/wishlist/"
-                                element={
-                                    <PrivateRoute>
-                                        <Wishlist />
-                                    </PrivateRoute>
-                                }
+                            path="/student/profile/"
+                            element={
+                                <ProtectedRoute allowedRole="student">
+                                <StudentProfile />
+                                </ProtectedRoute>
+                            }
                             />
                             <Route
-                                path="/student/profile/"
-                                element={
-                                    <PrivateRoute>
-                                        <StudentProfile />
-                                    </PrivateRoute>
-                                }
-                            />
-                            <Route
-                                path="/student/change-password/"
-                                element={
-                                    <PrivateRoute>
-                                        <StudentChangePassword />
-                                    </PrivateRoute>
-                                }
+                            path="/student/change-password/"
+                            element={
+                                <ProtectedRoute allowedRole="student">
+                                <StudentChangePassword />
+                                </ProtectedRoute>
+                            }
                             />
 
-                            {/* Teacher Routes */}
 
+                            {/* Instructor Routes */}
                             <Route
-                                path="/instructor/dashboard/"
-                                element={
-                                    <PrivateRoute>
-                                        <Dashboard />
-                                    </PrivateRoute>
-                                }
+                            path="/instructor/dashboard/"
+                            element={
+                                <ProtectedRoute allowedRole="instructor">
+                                <Dashboard />
+                                </ProtectedRoute>
+                            }
                             />
                             <Route
-                                path="/instructor/dashboard/"
-                                element={
-                                    <PrivateRoute>
-                                        <Dashboard />
-                                    </PrivateRoute>
-                                }
+                            path="/instructor/courses/"
+                            element={
+                                <ProtectedRoute allowedRole="instructor">
+                                <Courses />
+                                </ProtectedRoute>
+                            }
                             />
                             <Route
-                                path="/instructor/courses/"
-                                element={
-                                    <PrivateRoute>
-                                        <Courses />
-                                    </PrivateRoute>
-                                }
+                            path="/instructor/students/"
+                            element={
+                                <ProtectedRoute allowedRole="instructor">
+                                <Students />
+                                </ProtectedRoute>
+                            }
                             />
                             <Route
-                                path="/instructor/reviews/"
-                                element={
-                                    <PrivateRoute>
-                                        <Review />
-                                    </PrivateRoute>
-                                }
+                            path="/instructor/notifications/"
+                            element={
+                                <ProtectedRoute allowedRole="instructor">
+                                <TeacherNotification />
+                                </ProtectedRoute>
+                            }
                             />
                             <Route
-                                path="/instructor/students/"
-                                element={
-                                    <PrivateRoute>
-                                        <Students />
-                                    </PrivateRoute>
-                                }
+                            path="/instructor/question-answer/"
+                            element={
+                                <ProtectedRoute allowedRole="instructor">
+                                <QA />
+                                </ProtectedRoute>
+                            }
                             />
                             <Route
-                                path="/instructor/earning/"
-                                element={
-                                    <PrivateRoute>
-                                        <Earning />
-                                    </PrivateRoute>
-                                }
+                            path="/instructor/change-password/"
+                            element={
+                                <ProtectedRoute allowedRole="instructor">
+                                <ChangePassword />
+                                </ProtectedRoute>
+                            }
                             />
                             <Route
-                                path="/instructor/orders/"
-                                element={
-                                    <PrivateRoute>
-                                        <Orders />
-                                    </PrivateRoute>
-                                }
+                            path="/instructor/profile/"
+                            element={
+                                <ProtectedRoute allowedRole="instructor">
+                                <Profile />
+                                </ProtectedRoute>
+                            }
                             />
                             <Route
-                                path="/instructor/coupon/"
-                                element={
-                                    <PrivateRoute>
-                                        <Coupon />
-                                    </PrivateRoute>
-                                }
+                            path="/instructor/create-course/"
+                            element={
+                                <ProtectedRoute allowedRole="instructor">
+                                <CourseCreate />
+                                </ProtectedRoute>
+                            }
                             />
                             <Route
-                                path="/instructor/notifications/"
-                                element={
-                                    <PrivateRoute>
-                                        <TeacherNotification />
-                                    </PrivateRoute>
-                                }
+                            path="/instructor/edit-course/:course_id/"
+                            element={
+                                <ProtectedRoute allowedRole="instructor">
+                                <CourseEdit />
+                                </ProtectedRoute>
+                            }
                             />
                             <Route
-                                path="/instructor/question-answer/"
-                                element={
-                                    <PrivateRoute>
-                                        <QA />
-                                    </PrivateRoute>
-                                }
+                            path="/instructor/edit-course/:course_id/curriculum/"
+                            element={
+                                <ProtectedRoute allowedRole="instructor">
+                                <CourseEditCurriculum />
+                                </ProtectedRoute>
+                            }
                             />
-                            <Route
-                                path="/instructor/change-password/"
-                                element={
-                                    <PrivateRoute>
-                                        <ChangePassword />
-                                    </PrivateRoute>
-                                }
-                            />
-                            <Route
-                                path="/instructor/profile/"
-                                element={
-                                    <PrivateRoute>
-                                        <Profile />
-                                    </PrivateRoute>
-                                }
-                            />
-                            <Route
-                                path="/instructor/create-course/"
-                                element={
-                                    <PrivateRoute>
-                                        <CourseCreate />
-                                    </PrivateRoute>
-                                }
-                            />
-                            <Route
-                                path="/instructor/edit-course/:course_id/"
-                                element={
-                                    <PrivateRoute>
-                                        <CourseEdit />
-                                    </PrivateRoute>
-                                }
-                            />
-                            <Route
-                                path="/instructor/edit-course/:course_id/curriculum/"
-                                element={
-                                    <PrivateRoute>
-                                        <CourseEditCurriculum />
-                                    </PrivateRoute>
-                                }
-                            />
+
                         </Routes>
                     </MainWrapper>
                 </BrowserRouter>
             </ProfileContext.Provider>
-        </CartContext.Provider>
     );
 }
 

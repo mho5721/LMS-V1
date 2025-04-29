@@ -26,6 +26,12 @@ urlpatterns = [
     path("order/create-order/", api_views.CreateOrderAPIView.as_view()),
     path("order/checkout/<oid>/", api_views.CheckoutAPIView.as_view()),
     path("order/coupon/", api_views.CouponApplyAPIView.as_view()),
+    
+
+    # Course Material Routes
+    path("course/<course_id>/materials/", api_views.CourseMaterialListView.as_view(), name="course-material-list"),
+    path("course/materials/upload/", api_views.CourseMaterialCreateView.as_view(), name="course-material-upload"),
+    path("course/materials/<int:pk>/delete/", api_views.CourseMaterialDeleteView.as_view(), name="course-material-delete"),
 
 
     # Student API Endpoints

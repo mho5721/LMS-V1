@@ -4,7 +4,7 @@ import moment from "moment";
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import BaseHeader from "../partials/BaseHeader";
-import BaseFooter from "../partials/BaseFooter";
+
 
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
@@ -163,7 +163,7 @@ function Courses() {
                 </div>
             </section>
 
-            <BaseFooter />
+
         </>
     );
 }

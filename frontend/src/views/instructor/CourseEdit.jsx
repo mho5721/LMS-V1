@@ -6,7 +6,7 @@ import Cookie from "js-cookie";
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import BaseHeader from "../partials/BaseHeader";
-import BaseFooter from "../partials/BaseFooter";
+
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import useAxios from "../../utils/useAxios";
@@ -93,28 +93,79 @@ function CourseEdit() {
         });
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const json = {
-            title: courseData?.title,
-            description: courseData?.description,
-            image: courseData?.image,
-            file: courseData?.file,
-            level: courseData?.level,
-            language: courseData?.language,
-            price: courseData?.price,
-            category: courseData?.category,
-        };
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+    //     const json = {
+    //         title: courseData?.title,
+    //         description: courseData?.description,
+    //         image: courseData?.image,
+    //         file: courseData?.file,
+    //         level: courseData?.level,
+    //         language: courseData?.language,
+    //         price: courseData?.price,
+    //         category: courseData?.category,
+    //     };
 
-        // const response = await useAxios.post(`teacher/course-create/`, json);
-        const response = await useAxios.patch(`teacher/course-update/${UserData()?.teacher_id}/${param.course_id}/`, json);
-        console.log(response.data);
-        navigate(`/instructor/edit-course/${response?.data?.course_id}/`);
-        Swal.fire({
-            icon: "success",
-            title: "Course Edit Successfully",
-        });
-    };
+    //     // const response = await useAxios.post(`teacher/course-create/`, json);
+    //     const response = await useAxios.patch(`teacher/course-update/${UserData()?.teacher_id}/${param.course_id}/`, json);
+    //     console.log(response.data);
+    //     navigate(`/instructor/edit-course/${response?.data?.course_id}/`);
+    //     Swal.fire({
+    //         icon: "success",
+    //         title: "Course Edit Successfully",
+    //     });
+    // };
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  const formData = new FormData();
+
+  formData.append("title", courseData?.title || "");
+  formData.append("description", courseData?.description || "");
+  formData.append("level", courseData?.level || "");
+  formData.append("language", courseData?.language || "");
+  formData.append("price", courseData?.price || "");
+
+  if (courseData?.image && typeof courseData.image === "object") {
+    formData.append("image", courseData.image);  // if uploading new image
+  }
+  if (courseData?.file && typeof courseData.file === "object") {
+    formData.append("file", courseData.file);  // if uploading new file
+  }
+
+  // Correct category sending
+  if (courseData?.category?.id) {
+    formData.append("category", courseData.category.id);
+  } else if (typeof courseData.category === "number") {
+    formData.append("category", courseData.category);
+  }
+
+  try {
+    const response = await useAxios.patch(
+      `teacher/course-update/${UserData()?.teacher_id}/${param.course_id}/`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    console.log(response.data);
+    navigate(`/instructor/edit-course/${response?.data?.course_id}/`);
+    Swal.fire({
+      icon: "success",
+      title: "Course Updated Successfully!",
+    });
+  } catch (error) {
+    console.error("Course update failed", error);
+    Swal.fire({
+      icon: "error",
+      title: "Course Update Failed",
+    });
+  }
+};
+
+
 
     const fetchCourseDetail = () => {
         useAxios.get(`course/category/`).then((res) => {
@@ -266,7 +317,7 @@ function CourseEdit() {
                 </div>
             </section>
 
-            <BaseFooter />
+
         </>
     );
 }

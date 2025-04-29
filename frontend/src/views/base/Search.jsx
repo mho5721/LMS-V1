@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from "react";
 import BaseHeader from "../partials/BaseHeader";
-import BaseFooter from "../partials/BaseFooter";
+
 import { Link } from "react-router-dom";
 import Rater from "react-rater";
 import "react-rater/lib/react-rater.css";
@@ -237,7 +237,6 @@ function Search() {
                 </div>
             </section>
 
-            <BaseFooter />
         </>
     );
 }

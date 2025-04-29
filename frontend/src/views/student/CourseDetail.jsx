@@ -5,7 +5,7 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 
 import BaseHeader from "../partials/BaseHeader";
-import BaseFooter from "../partials/BaseFooter";
+
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import useAxios from "../../utils/useAxios";
@@ -716,7 +716,7 @@ function CourseDetail() {
                 </Modal.Body>
             </Modal>
 
-            <BaseFooter />
+
         </>
     );
 }

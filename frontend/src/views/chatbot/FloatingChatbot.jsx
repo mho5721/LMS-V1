@@ -61,7 +61,7 @@ function FloatingChatbot() {
     }, 100);
   };
 
-  const handleSend = async () => {
+const handleSend = async () => {
     if (!userInput.trim()) return;
 
     const newMessages = [...messages, { role: "user", content: userInput }];
@@ -70,10 +70,24 @@ function FloatingChatbot() {
     setIsLoading(true);
 
     try {
-      const formattedMessages = newMessages.map(msg => ({
-        role: msg.role,
-        parts: [{ text: msg.content }]
-      }));
+      // ✅ NEW: Build a special prompt template
+      const systemPrompt = `
+  You are an AI learning assistant in an LMS platform.
+  - You help students understand lessons and assignments.
+  - Be clear, concise, friendly, and guide the student step-by-step.
+  - Only answer based on LMS course materials.
+  - If unsure or the topic is outside LMS content, politely say: "I'm sorry, I can only assist with LMS topics."
+
+  Student's question:
+  ${userInput}
+      `.trim();
+
+      const formattedMessages = [
+        {
+          role: "user",
+          parts: [{ text: systemPrompt }]
+        }
+      ];
 
       const response = await axios.post(
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
@@ -94,7 +108,8 @@ function FloatingChatbot() {
     } finally {
       setIsLoading(false);
     }
-  };
+};
+
 
   return (
     <>
@@ -192,12 +207,12 @@ function FloatingChatbot() {
                     whiteSpace: "pre-wrap",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
+                    justifyContent: "flex-start",
                     minHeight: "32px",
                     }}>
                     <div style={{
                         width: "100%",
-                        textAlign: "center",
+                        textAlign: "left",
                     }}>
                         <ReactMarkdown components={{
                         p: ({ node, ...props }) => <span {...props} />

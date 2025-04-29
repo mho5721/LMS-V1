@@ -22,7 +22,7 @@ const MainWrapper = ({ children }) => {
       {loading ? null : (
         <>
           {children}
-          <FloatingChatbot /> {/* <-- Add the chatbot HERE after children */}
+          <FloatingChatbot /> 
         </>
       )}
     </>

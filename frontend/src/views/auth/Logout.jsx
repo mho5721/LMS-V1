@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import BaseHeader from "../partials/BaseHeader";
-import BaseFooter from "../partials/BaseFooter";
+
 import { logout } from "../../utils/auth";
 import { Link } from "react-router-dom";
 
@@ -43,7 +43,7 @@ function Logout() {
         </div>
       </section>
 
-      <BaseFooter />
+
     </>
   );
 }

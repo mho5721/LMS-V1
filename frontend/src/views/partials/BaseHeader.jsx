@@ -1,26 +1,23 @@
-import React, { useContext, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { CartContext } from "../plugin/Context";
+import { useEffect, useContext, useState } from "react";
+import { Link, useNavigate, NavLink } from "react-router-dom";
 import { useAuthStore } from "../../store/auth";
+import { ProfileContext } from "../plugin/Context";
 
 function BaseHeader() {
-    const [cartCount, setCartCount] = useContext(CartContext);
-    const [searchQuery, setSearchQuery] = useState("");
     const navigate = useNavigate();
-
-    const handleSearchSubmit = () => {
-        navigate(`/search/?search=${searchQuery}`);
-    };
-
     const [isLoggedIn, user] = useAuthStore((state) => [state.isLoggedIn, state.user]);
+    const [profile] = useContext(ProfileContext);
+
+    const isInstructor = profile?.is_instructor;
+    const isStudent = !isInstructor; // Anyone NOT instructor is considered student
 
     return (
         <div>
             <nav className="navbar navbar-expand-lg bg-body-tertiary" data-bs-theme="dark">
                 <div className="container">
-                    <Link className="navbar-brand" to="/">
-                        Desphixs
-                    </Link>
+                    <NavLink className="navbar-brand" to="/">
+                        EduCollab LMS
+                    </NavLink>
                     <button
                         className="navbar-toggler"
                         type="button"
@@ -34,171 +31,79 @@ function BaseHeader() {
                     </button>
                     <div className="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-                            <li className="nav-item">
-                                <Link className="nav-link" to="/pages/contact-us/">
-                                    {" "}
-                                    <i className="fas fa-phone"></i> Contact Us
-                                </Link>
-                            </li>
-                            <li className="nav-item">
-                                <Link className="nav-link" to="/pages/about-us/">
-                                    <i className="fas fa-address-card"></i> About Us
-                                </Link>
-                            </li>
-                            <li className="nav-item dropdown">
-                                <a
-                                    className="nav-link dropdown-toggle"
-                                    href="#"
-                                    role="button"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false"
-                                >
-                                    <i className="fas fa-chalkboard-user"></i> Instructor
-                                </a>
-                                <ul className="dropdown-menu">
-                                    <li>
-                                        <Link
-                                            className="dropdown-item"
-                                            to={`/instructor/dashboard/`}
-                                        >
-                                            <i className="bi bi-grid-fill"></i> Dashboard
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link className="dropdown-item" to={`/instructor/courses/`}>
-                                            <i className="fas fa-shopping-cart"></i> My Courses
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link
-                                            className="dropdown-item"
-                                            to={`/instructor/create-course/`}
-                                        >
-                                            <i className="fas fa-plus"></i> Create Course
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link className="dropdown-item" to={`/instructor/reviews/`}>
-                                            <i className="fas fa-star"></i> Reviews{" "}
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link
-                                            className="dropdown-item"
-                                            to={`/instructor/question-answer/`}
-                                        >
-                                            <i className="fas fa-envelope"></i> Q/A{" "}
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link
-                                            className="dropdown-item"
-                                            to={`/instructor/students/`}
-                                        >
-                                            <i className="fas fa-users"></i> Students{" "}
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link className="dropdown-item" to={`/instructor/earning/`}>
-                                            <i className="fas fa-dollar-sign"></i> Earning{" "}
-                                        </Link>
-                                    </li>
 
-                                    <li>
-                                        <Link className="dropdown-item" to={`/instructor/profile/`}>
-                                            <i className="fas fa-gear"></i> Settings & Profile{" "}
-                                        </Link>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li className="nav-item dropdown">
-                                <a
-                                    className="nav-link dropdown-toggle"
-                                    href="#"
-                                    role="button"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false"
-                                >
-                                    <i className="fas fa-graduation-cap"></i> Student
-                                </a>
-                                <ul className="dropdown-menu">
-                                    <li>
-                                        <Link className="dropdown-item" to={`/student/dashboard/`}>
-                                            {" "}
-                                            <i className="bi bi-grid-fill"></i> Dashboard
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link className="dropdown-item" to={`/student/courses/`}>
-                                            {" "}
-                                            <i className="fas fa-shopping-cart"></i>My Courses
-                                        </Link>
-                                    </li>
+                            {/* Dashboard */}
 
-                                    <li>
-                                        <Link className="dropdown-item" to={`/student/wishlist/`}>
-                                            {" "}
-                                            <i className="fas fa-heart"></i> Wishlist{" "}
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link
-                                            className="dropdown-item"
-                                            to={`/student/question-answer/`}
-                                        >
-                                            {" "}
-                                            <i className="fas fa-envelope"></i> Q/A{" "}
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link className="dropdown-item" to={`/student/profile/`}>
-                                            {" "}
-                                            <i className="fas fa-gear"></i> Profile & Settings
-                                        </Link>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                        <div className="d-flex" role="search">
-                            <input
-                                className="form-control me-2 w-100"
-                                type="search"
-                                placeholder="Search Courses"
-                                aria-label="Search Courses"
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                            <button
-                                onClick={handleSearchSubmit}
-                                className="btn btn-outline-success w-50"
-                                type="submit"
+                            <li className="nav-item">
+                            <NavLink
+                                className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
+                                to={isInstructor ? "/instructor/dashboard/" : "/student/dashboard/"}
                             >
-                                Search <i className="fas fa-search"></i>
-                            </button>
-                        </div>
-                        {isLoggedIn() === true ? (
+                                <i className="fas fa-home"></i> Dashboard
+                            </NavLink>
+                            </li>
+
+
+                            {/* Courses */}
+                            <li className="nav-item">
+                                <NavLink
+                                    className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
+                                    to={isInstructor ? "/instructor/courses/" : "/student/courses/"}
+                                >
+                                    <i className="fas fa-book"></i> Courses
+                                </NavLink>
+                            </li>
+
+                            {/* Study Groups */}
+                            <li className="nav-item">
+                                <NavLink
+                                    className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
+                                    to="/study-groups/"
+                                >
+                                    <i className="fas fa-users"></i> Study Groups
+                                </NavLink>
+                            </li>
+
+                            {/* Role Specific - My Progress or Analytics */}
+                            {isStudent && (
+                                <li className="nav-item">
+                                    <NavLink
+                                        className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
+                                        to="/student/progress/"
+                                    >
+                                        <i className="fas fa-chart-line"></i> My Progress
+                                    </NavLink>
+                                </li>
+                            )}
+                            {isInstructor && (
+                                <li className="nav-item">
+                                    <NavLink
+                                        className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
+                                        to="/instructor/analytics/"
+                                    >
+                                        <i className="fas fa-chart-pie"></i> Analytics
+                                    </NavLink>
+                                </li>
+                            )}
+                        </ul>
+
+                        {/* Right side: Login/Register or Logout */}
+                        {isLoggedIn() ? (
                             <>
-                                <Link to="/logout/" className="btn btn-primary ms-2" type="submit">
-                                    Logout <i className="fas fa-usign-out-alt"></i>
+                                <Link to="/logout/" className="btn btn-primary ms-2">
+                                    Logout <i className="fas fa-sign-out-alt"></i>
                                 </Link>
                             </>
                         ) : (
                             <>
-                                {/* Login and register button */}
-                                <Link to="/login/" className="btn btn-primary ms-2" type="submit">
+                                <Link to="/login/" className="btn btn-primary ms-2">
                                     Login <i className="fas fa-sign-in-alt"></i>
                                 </Link>
-                                <Link
-                                    to="/register/"
-                                    className="btn btn-primary ms-2"
-                                    type="submit"
-                                >
-                                    Register <i className="fas fa-user-plus"> </i>
+                                <Link to="/register/" className="btn btn-primary ms-2">
+                                    Register <i className="fas fa-user-plus"></i>
                                 </Link>
                             </>
                         )}
-                        <Link className="btn btn-success ms-2" to="/cart/">
-                            Cart ({cartCount}) <i className="fas fa-shopping-cart"> </i>
-                        </Link>
                     </div>
                 </div>
             </nav>

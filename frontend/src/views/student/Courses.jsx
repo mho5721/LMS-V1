@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import moment from "moment";
 
 import BaseHeader from "../partials/BaseHeader";
-import BaseFooter from "../partials/BaseFooter";
+
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import useAxios from "../../utils/useAxios";
@@ -161,7 +161,7 @@ function Courses() {
                 </div>
             </section>
 
-            <BaseFooter />
+
         </>
     );
 }

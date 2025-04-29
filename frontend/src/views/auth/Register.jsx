@@ -5,7 +5,7 @@ import apiInstance from "../../utils/axios";
 import { register } from "../../utils/auth";
 
 import BaseHeader from "../partials/BaseHeader";
-import BaseFooter from "../partials/BaseFooter";
+
 
 function Register() {
   const [fullName, setFullName] = useState("");
@@ -143,7 +143,7 @@ function Register() {
         </div>
       </section>
 
-      <BaseFooter />
+
     </>
   );
 }

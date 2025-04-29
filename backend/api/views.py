@@ -815,33 +815,39 @@ class TeacherNotificationDetailAPIView(generics.RetrieveUpdateAPIView):
 
 class CourseCreateAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request):
         title = request.data.get("title")
         description = request.data.get("description")
-        image = request.data.get("image")
-        file = request.data.get("file")
         level = request.data.get("level")
         language = request.data.get("language")
         price = request.data.get("price")
-        category = request.data.get("category")
+        category_id = request.data.get("category")
 
-        category_obj = api_models.Category.objects.filter(id=category).first()
+        file = request.FILES.get("file")
+        image = request.FILES.get("image")
+
+        category = api_models.Category.objects.filter(id=category_id).first()
         teacher = api_models.Teacher.objects.get(user=request.user)
 
         course = api_models.Course.objects.create(
             teacher=teacher,
-            category=category_obj,
-            file=file,
-            image=image,
+            category=category,
             title=title,
             description=description,
-            price=price,
+            level=level,
             language=language,
-            level=level
+            price=price,
+            file=file,
+            image=image,
         )
 
-        return Response({"message": "Course Created", "course_id": course.course_id}, status=status.HTTP_201_CREATED)
+        return Response({
+            "message": "Course created successfully",
+            "course_id": course.course_id
+        }, status=status.HTTP_201_CREATED)
+
 
 
 
@@ -928,9 +934,13 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
         if 'file' in request.data and not str(request.data['file']).startswith("http://"):
             course.file = request.data['file']
 
-        if 'category' in request.data['category'] and request.data['category'] != 'NaN' and request.data['category'] != "undefined":
-            category = api_models.Category.objects.get(id=request.data['category'])
-            course.category = category
+        if 'category' in request.data and request.data['category'] not in ('NaN', 'undefined', ''):
+            try:
+                category = api_models.Category.objects.get(id=request.data['category'])
+                course.category = category
+            except api_models.Category.DoesNotExist:
+                pass  # or handle category not found if needed
+
 
         self.perform_update(serializer)
         self.update_variant(course, request.data)
@@ -1131,3 +1141,33 @@ class FileUploadAPIView(APIView):
             })
 
         return Response({"error": "No file provided"}, status=400)
+
+# Upload new course material
+class CourseMaterialCreateView(generics.CreateAPIView):
+    queryset = api_models.CourseMaterial.objects.all()
+    serializer_class = api_serializer.CourseMaterialSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)
+
+    def perform_create(self, serializer):
+        course_id = self.request.data.get('course')
+        course = api_models.Course.objects.get(course_id=course_id)  # <-- important: using course_id
+        serializer.save(course=course)
+
+
+# List all materials by course
+class CourseMaterialListView(generics.ListAPIView):
+    serializer_class = api_serializer.CourseMaterialSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        course_id = self.kwargs.get('course_id')
+        course = api_models.Course.objects.get(course_id=course_id)
+        return api_models.CourseMaterial.objects.filter(course=course)
+
+
+# Delete a course material
+class CourseMaterialDeleteView(generics.DestroyAPIView):
+    queryset = api_models.CourseMaterial.objects.all()
+    serializer_class = api_serializer.CourseMaterialSerializer
+    permission_classes = [IsAuthenticated]

@@ -4,7 +4,7 @@ import moment from "moment";
 import Swal from "sweetalert2";
 
 import BaseHeader from "../partials/BaseHeader";
-import BaseFooter from "../partials/BaseFooter";
+
 import { useParams } from "react-router-dom";
 import useAxios from "../../utils/useAxios";
 import CartId from "../plugin/CartId";
@@ -829,7 +829,6 @@ function CourseDetail() {
                 )}
             </>
 
-            <BaseFooter />
         </>
     );
 }

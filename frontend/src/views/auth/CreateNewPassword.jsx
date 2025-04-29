@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import BaseHeader from "../partials/BaseHeader";
-import BaseFooter from "../partials/BaseFooter";
 import apiInstance from "../../utils/axios";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Toast from "../plugin/Toast";
@@ -136,7 +135,6 @@ function CreateNewPassword() {
         </div>
       </section>
 
-      <BaseFooter />
     </>
   );
 }

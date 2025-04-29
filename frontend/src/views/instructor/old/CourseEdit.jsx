@@ -6,7 +6,7 @@ import Cookie from "js-cookie";
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import BaseHeader from "../partials/BaseHeader";
-import BaseFooter from "../partials/BaseFooter";
+
 import { Link, useParams } from "react-router-dom";
 
 import useAxios from "../../utils/useAxios";
@@ -402,7 +402,7 @@ function CourseEdit() {
                 </div>
             </section>
 
-            <BaseFooter />
+
         </>
     );
 }
