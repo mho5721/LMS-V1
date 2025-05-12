@@ -3,6 +3,7 @@ import BaseHeader from "../partials/BaseHeader";
 
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
+import BaseHeader from "../partials/BaseHeader";
 
 import ReactPlayer from "react-player";
 

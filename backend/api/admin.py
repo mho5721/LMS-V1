@@ -14,3 +14,7 @@ admin.site.register(models.Note)
 admin.site.register(models.Review)
 admin.site.register(models.Notification)
 admin.site.register(models.CourseMaterial)
+
+admin.site.register(models.StudyGroup)
+admin.site.register(models.StudyGroupMember)
+admin.site.register(models.GroupMessage)

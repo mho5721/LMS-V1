@@ -36,6 +36,13 @@ import CourseEditCurriculum from "./views/instructor/CourseEditCurriculum";
 import Redirector from "./views/auth/Redirector";
 import ProtectedRoute from "./views/partials/ProtectedRoute";
 
+import StudyGroups from "./views/student/StudyGroups";
+import StudyGroupDetail from "./views/student/StudyGroupDetail";
+import CreateStudyGroup from "./views/student/CreateStudyGroup";
+
+import InstructorStudyGroups from "./views/instructor/InstructorStudyGroups";
+import InstructorStudyGroupDetail from "./views/instructor/InstructorStudyGroupDetail";
+
 function App() {
     const [profile, setProfile] = useState([]);
 
@@ -102,6 +109,31 @@ useEffect(() => {
                                 </ProtectedRoute>
                             }
                             />
+                            <Route
+                            path="/student/study-groups/"
+                            element={
+                                <ProtectedRoute allowedRole="student">
+                                <StudyGroups />
+                                </ProtectedRoute>
+                            }
+                            />
+                            <Route
+                            path="/student/study-groups/create/"
+                            element={
+                                <ProtectedRoute allowedRole="student">
+                                <CreateStudyGroup />
+                                </ProtectedRoute>
+                            }
+                            />
+                            <Route
+                            path="/student/study-groups/:id/"
+                            element={
+                                <ProtectedRoute allowedRole="student">
+                                <StudyGroupDetail />
+                                </ProtectedRoute>
+                            }
+                            />
+
 
 
                             {/* Instructor Routes */}
@@ -185,6 +217,24 @@ useEffect(() => {
                                 </ProtectedRoute>
                             }
                             />
+                            <Route
+                            path="/instructor/study-groups/"
+                            element={
+                                <ProtectedRoute allowedRole="instructor">
+                                <InstructorStudyGroups />
+                                </ProtectedRoute>
+                            }
+                            />
+
+                            <Route
+                            path="/instructor/study-groups/:id/"
+                            element={
+                                <ProtectedRoute allowedRole="instructor">
+                                <InstructorStudyGroupDetail />
+                                </ProtectedRoute>
+                            }
+                            />
+
 
                         </Routes>
                     </MainWrapper>

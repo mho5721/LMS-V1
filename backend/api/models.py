@@ -419,4 +419,33 @@ class CourseMaterial(models.Model):
     def __str__(self):
         return self.title
 
+class StudyGroup(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    date_created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.course.title}"
+
+
+class StudyGroupMember(models.Model):
+    group = models.ForeignKey(StudyGroup, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('group', 'user')
+
+
+class GroupMessage(models.Model):
+    group = models.ForeignKey(StudyGroup, on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    message = models.TextField()
+    reply_to = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.sender.username} in {self.group.name}"
+
 

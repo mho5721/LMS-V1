@@ -330,3 +330,18 @@ class CourseMaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = api_models.CourseMaterial
         fields = "__all__"
+
+class GroupMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = api_models.GroupMessage
+        fields = '__all__'
+
+class StudyGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = api_models.StudyGroup
+        fields = '__all__'
+
+class StudyGroupMemberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = api_models.StudyGroupMember
+        fields = '__all__'

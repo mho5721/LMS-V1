@@ -2,6 +2,12 @@ from api import views as api_views
 from django.urls import path
 
 from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'study-groups', api_views.StudyGroupViewSet)
+router.register(r'study-group-members', api_views.StudyGroupMemberViewSet)
+router.register(r'study-group-messages', api_views.GroupMessageViewSet)
 
 urlpatterns = [
     # Authentication Endpoints
@@ -71,5 +77,8 @@ urlpatterns = [
     path("file-upload/", api_views.FileUploadAPIView.as_view())
 
 ]
+
+urlpatterns += router.urls
+
 
 

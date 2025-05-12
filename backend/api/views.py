@@ -1171,3 +1171,21 @@ class CourseMaterialDeleteView(generics.DestroyAPIView):
     queryset = api_models.CourseMaterial.objects.all()
     serializer_class = api_serializer.CourseMaterialSerializer
     permission_classes = [IsAuthenticated]
+    
+
+class StudyGroupViewSet(viewsets.ModelViewSet):
+    queryset = api_models.StudyGroup.objects.all()
+    serializer_class = api_serializer.StudyGroupSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class GroupMessageViewSet(viewsets.ModelViewSet):
+    queryset = api_models.GroupMessage.objects.all()
+    serializer_class = api_serializer.GroupMessageSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class StudyGroupMemberViewSet(viewsets.ModelViewSet):
+    queryset = api_models.StudyGroupMember.objects.all()
+    serializer_class = api_serializer.StudyGroupMemberSerializer
+    permission_classes = [IsAuthenticated]
