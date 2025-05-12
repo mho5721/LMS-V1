@@ -25,14 +25,7 @@ urlpatterns = [
     path("course/course-list/", api_views.CourseListAPIView.as_view()),
     path("course/search/", api_views.SearchCourseAPIView.as_view()),
     path("course/course-detail/<slug>/", api_views.CourseDetailAPIView.as_view()),
-    path("course/cart/", api_views.CartAPIView.as_view()),
-    path("course/cart-list/<cart_id>/", api_views.CartListAPIView.as_view()),
-    path("cart/stats/<cart_id>/", api_views.CartStatsAPIView.as_view()),
-    path("course/cart-item-delete/<cart_id>/<item_id>/", api_views.CartItemDeleteAPIView.as_view()),
-    path("order/create-order/", api_views.CreateOrderAPIView.as_view()),
-    path("order/checkout/<oid>/", api_views.CheckoutAPIView.as_view()),
-    path("order/coupon/", api_views.CouponApplyAPIView.as_view()),
-    
+
 
     # Course Material Routes
     path("course/<course_id>/materials/", api_views.CourseMaterialListView.as_view(), name="course-material-list"),
@@ -60,12 +53,8 @@ urlpatterns = [
     path("teacher/review-lists/<teacher_id>/", api_views.TeacherReviewListAPIView.as_view()),
     path("teacher/review-detail/<teacher_id>/<review_id>/", api_views.TeacherReviewDetailAPIView.as_view()),
     path("teacher/student-lists/<teacher_id>/", api_views.TeacherStudentsListAPIVIew.as_view({'get': 'list'})),
-    path("teacher/all-months-earning/<teacher_id>/", api_views.TeacherAllMonthEarningAPIView),
     path("teacher/best-course-earning/<teacher_id>/", api_views.TeacherBestSellingCourseAPIView.as_view({'get': 'list'})),
-    path("teacher/course-order-list/<teacher_id>/", api_views.TeacherCourseOrdersListAPIView.as_view()),
     path("teacher/question-answer-list/<teacher_id>/", api_views.TeacherQuestionAnswerListAPIView.as_view()),
-    path("teacher/coupon-list/<teacher_id>/", api_views.TeacherCouponListCreateAPIView.as_view()),
-    path("teacher/coupon-detail/<teacher_id>/<coupon_id>/", api_views.TeacherCouponDetailAPIView.as_view()),
     path("teacher/noti-list/<teacher_id>/", api_views.TeacherNotificationListAPIView.as_view()),
     path("teacher/noti-detail/<teacher_id>/<noti_id>", api_views.TeacherNotificationDetailAPIView.as_view()),
     path("teacher/course-create/", api_views.CourseCreateAPIView.as_view()),

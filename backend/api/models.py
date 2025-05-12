@@ -73,9 +73,6 @@ class Teacher(models.Model):
     def __str__(self):
         return self.full_name
     
-    def students(self):
-        return CartOrderItem.objects.filter(teacher=self)
-    
     def courses(self):
         return Course.objects.filter(teacher=self)
     
@@ -244,58 +241,6 @@ class Cart(models.Model):
     def __str__(self):
         return self.course.title
     
-class CartOrder(models.Model):
-    student = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    teachers = models.ManyToManyField(Teacher, blank=True)
-    sub_total = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
-    tax_fee = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
-    total = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
-    initial_total = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
-    saved = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
-    payment_status = models.CharField(choices=PAYMENT_STATUS, default="Processing", max_length=100)
-    full_name = models.CharField(max_length=100, null=True, blank=True)
-    email = models.CharField(max_length=100, null=True, blank=True)
-    country = models.CharField(max_length=100, null=True, blank=True)
-    coupons = models.ManyToManyField("api.Coupon", blank=True)
-    stripe_session_id = models.CharField(max_length=1000, null=True, blank=True)
-    oid = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
-    date = models.DateTimeField(default=timezone.now)
-
-
-    class Meta:
-        ordering = ['-date']
-    
-    def order_items(self):
-        return CartOrderItem.objects.filter(order=self)
-    
-    def __str__(self):
-        return self.oid
-    
-class CartOrderItem(models.Model):
-    order = models.ForeignKey(CartOrder, on_delete=models.CASCADE, related_name="orderitem")
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="order_item")
-    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
-    price = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
-    tax_fee = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
-    total = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
-    initial_total = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
-    saved = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)
-    coupons = models.ManyToManyField("api.Coupon", blank=True)
-    applied_coupon = models.BooleanField(default=False)
-    oid = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
-    date = models.DateTimeField(default=timezone.now)
-
-    class Meta:
-        ordering = ['-date']
-    
-    def order_id(self):
-        return f"Order ID #{self.order.oid}"
-    
-    def payment_status(self):
-        return f"{self.order.payment_status}"
-    
-    def __str__(self):
-        return self.oid
     
 class Certificate(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
@@ -319,7 +264,6 @@ class EnrolledCourse(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
-    order_item = models.ForeignKey(CartOrderItem, on_delete=models.CASCADE)
     enrollment_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     date = models.DateTimeField(default=timezone.now)
 
@@ -373,8 +317,6 @@ class Review(models.Model):
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
-    order = models.ForeignKey(CartOrder, on_delete=models.SET_NULL, null=True, blank=True)
-    order_item = models.ForeignKey(CartOrderItem, on_delete=models.SET_NULL, null=True, blank=True)
     review = models.ForeignKey(Review, on_delete=models.SET_NULL, null=True, blank=True)
     type = models.CharField(max_length=100, choices=NOTI_TYPE)
     seen = models.BooleanField(default=False)
@@ -383,16 +325,6 @@ class Notification(models.Model):
     def __str__(self):
         return self.type
 
-class Coupon(models.Model):
-    teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
-    used_by = models.ManyToManyField(User, blank=True)
-    code = models.CharField(max_length=50)
-    discount = models.IntegerField(default=1)
-    active = models.BooleanField(default=False)
-    date = models.DateTimeField(default=timezone.now)   
-
-    def __str__(self):
-        return self.code
     
 class Wishlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)

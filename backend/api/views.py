@@ -168,236 +168,6 @@ class TeacherCourseDetailAPIView(generics.RetrieveAPIView):
         course = api_models.Course.objects.get(course_id=course_id, platform_status="Published", teacher_course_status="Published")
         return course
     
-class CartAPIView(generics.CreateAPIView):
-    queryset = api_models.Cart.objects.all()
-    serializer_class = api_serializer.CartSerializer
-    permission_classes = [AllowAny]
-
-    def create(self, request, *args, **kwargs):
-        course_id = request.data['course_id']  
-        user_id = request.data['user_id']
-        price = request.data['price']
-        country_name = request.data['country_name']
-        cart_id = request.data['cart_id']
-
-        print("course_id ==========", course_id)
-
-        course = api_models.Course.objects.filter(id=course_id).first()
-        
-        if user_id != "undefined":
-            user = User.objects.filter(id=user_id).first()
-        else:
-            user = None
-
-        try:
-            country_object = api_models.Country.objects.filter(name=country_name).first()
-            country = country_object.name
-        except:
-            country_object = None
-            country = "United States"
-
-        if country_object:
-            tax_rate = country_object.tax_rate / 100
-        else:
-            tax_rate = 0
-
-        cart = api_models.Cart.objects.filter(cart_id=cart_id, course=course).first()
-
-        if cart:
-            cart.course = course
-            cart.user = user
-            cart.price = price
-            cart.tax_fee = Decimal(price) * Decimal(tax_rate)
-            cart.country = country
-            cart.cart_id = cart_id
-            cart.total = Decimal(cart.price) + Decimal(cart.tax_fee)
-            cart.save()
-
-            return Response({"message": "Cart Updated Successfully"}, status=status.HTTP_200_OK)
-
-        else:
-            cart = api_models.Cart()
-
-            cart.course = course
-            cart.user = user
-            cart.price = price
-            cart.tax_fee = Decimal(price) * Decimal(tax_rate)
-            cart.country = country
-            cart.cart_id = cart_id
-            cart.total = Decimal(cart.price) + Decimal(cart.tax_fee)
-            cart.save()
-
-            return Response({"message": "Cart Created Successfully"}, status=status.HTTP_201_CREATED)
-
-class CartListAPIView(generics.ListAPIView):
-    serializer_class = api_serializer.CartSerializer
-    permission_classes = [AllowAny]
-
-    def get_queryset(self):
-        cart_id = self.kwargs['cart_id']
-        queryset = api_models.Cart.objects.filter(cart_id=cart_id)
-        return queryset
-
-class CartItemDeleteAPIView(generics.DestroyAPIView):
-    serializer_class = api_serializer.CartSerializer
-    permission_classes = [AllowAny]
-
-    def get_object(self):
-        cart_id = self.kwargs['cart_id']
-        item_id = self.kwargs['item_id']
-
-        return api_models.Cart.objects.filter(cart_id=cart_id, id=item_id).first()
-
-class CartStatsAPIView(generics.RetrieveAPIView):
-    serializer_class = api_serializer.CartSerializer
-    permission_classes = [AllowAny]
-    lookup_field = 'cart_id'
-
-    def get_queryset(self):
-        cart_id = self.kwargs['cart_id']
-        queryset = api_models.Cart.objects.filter(cart_id=cart_id)
-        return queryset
-    
-    def get(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-
-        total_price = 0.00
-        total_tax = 0.00
-        total_total = 0.00
-
-        for cart_item in queryset:
-            total_price += float(self.calculate_price(cart_item))
-            total_tax += float(self.calculate_tax(cart_item))
-            total_total += round(float(self.calculate_total(cart_item)), 2)
-
-        data = {
-            "price": total_price,
-            "tax": total_tax,
-            "total": total_total,
-        }
-
-        return Response(data)
-
-    def calculate_price(self, cart_item):
-        return cart_item.price
-    
-    def calculate_tax(self, cart_item):
-        return cart_item.tax_fee
-
-    def calculate_total(self, cart_item):
-        return cart_item.total
-
-class CreateOrderAPIView(generics.CreateAPIView):
-    serializer_class = api_serializer.CartOrderSerializer
-    permission_classes = [IsAuthenticated]
-
-    def create(self, request, *args, **kwargs):
-        print(request.headers.get('Authorization'))
-        full_name = request.data['full_name']
-        email = request.data['email']
-        country = request.data['country']
-        cart_id = request.data['cart_id']
-        user_id = request.user.id
-
-        if user_id != 0:
-            user = User.objects.get(id=user_id)
-        else:
-            user = None
-
-        cart_items = api_models.Cart.objects.filter(cart_id=cart_id)
-
-        total_price = Decimal(0.00)
-        total_tax = Decimal(0.00)
-        total_initial_total = Decimal(0.00)
-        total_total = Decimal(0.00)
-
-        order = api_models.CartOrder.objects.create(
-            full_name=full_name,
-            email=email,
-            country=country,
-            student=user
-        )
-
-        for c in cart_items:
-            api_models.CartOrderItem.objects.create(
-                order=order,
-                course=c.course,
-                price=c.price,
-                tax_fee=c.tax_fee,
-                total=c.total,
-                initial_total=c.total,
-                teacher=c.course.teacher
-            )
-
-            total_price += Decimal(c.price)
-            total_tax += Decimal(c.tax_fee)
-            total_initial_total += Decimal(c.total)
-            total_total += Decimal(c.total)
-
-            order.teachers.add(c.course.teacher)
-
-        order.sub_total = total_price
-        order.tax_fee = total_tax
-        order.initial_total = total_initial_total
-        order.total = total_total
-        order.save()
-
-        return Response({"message": "Order Created Successfully", "order_oid": order.oid}, status=status.HTTP_201_CREATED)
-
-class CheckoutAPIView(generics.RetrieveAPIView):
-    serializer_class = api_serializer.CartOrderSerializer
-    permission_classes = [IsAuthenticated]
-    queryset = api_models.CartOrder.objects.all()
-    lookup_field = 'oid'
-
-class CouponApplyAPIView(generics.CreateAPIView):
-    serializer_class = api_serializer.CouponSerializer
-    permission_classes = [IsAuthenticated]
-
-    def create(self, request, *args, **kwargs):
-        order_oid = request.data['order_oid']
-        coupon_code = request.data['coupon_code']
-
-        order = api_models.CartOrder.objects.get(oid=order_oid)
-        coupon = api_models.Coupon.objects.filter(code=coupon_code).first()
-
-        if coupon:
-            order_items = api_models.CartOrderItem.objects.filter(order=order, teacher=coupon.teacher)
-            for i in order_items:
-                if not coupon in i.coupons.all():
-                    discount = i.total * coupon.discount / 100
-
-                    i.total -= discount
-                    i.price -= discount
-                    i.saved += discount
-                    i.applied_coupon = True
-                    i.coupons.add(coupon)
-
-                    order.coupons.add(coupon)
-                    order.total -= discount
-                    order.sub_total -= discount
-                    order.saved += discount
-
-                    i.save()
-                    order.save()
-                    coupon.used_by.add(order.student)
-                    return Response({"message": "Coupon Found and Activated", "icon": "success"}, status=status.HTTP_201_CREATED)
-                else:
-                    return Response({"message": "Coupon Already Applied", "icon": "warning"}, status=status.HTTP_200_OK)
-        else:
-            return Response({"message": "Coupon Not Found", "icon": "error"}, status=status.HTTP_404_NOT_FOUND)
-
-
-
-            
-class SearchCourseAPIView(generics.ListAPIView):
-    serializer_class = api_serializer.CourseSerializer
-    permission_classes = [AllowAny]
-
-    def get_queryset(self):
-        query = self.request.GET.get('query')
-        # learn lms
-        return api_models.Course.objects.filter(title__icontains=query, platform_status="Published", teacher_course_status="Published")
     
 class StudentSummaryAPIView(generics.ListAPIView):
     serializer_class = api_serializer.StudentSummarySerializer
@@ -633,9 +403,7 @@ class TeacherSummaryAPIView(generics.ListAPIView):
         one_month_ago = datetime.today() - timedelta(days=28)
 
         total_courses = api_models.Course.objects.filter(teacher=teacher).count()
-        total_revenue = api_models.CartOrderItem.objects.filter(teacher=teacher, order__payment_status="Paid").aggregate(total_revenue=models.Sum("price"))['total_revenue'] or 0
-        monthly_revenue = api_models.CartOrderItem.objects.filter(teacher=teacher, order__payment_status="Paid", date__gte=one_month_ago).aggregate(total_revenue=models.Sum("price"))['total_revenue'] or 0
-
+        
         enrolled_courses = api_models.EnrolledCourse.objects.filter(teacher=teacher)
         unique_student_ids = set()
         students = []
@@ -717,23 +485,6 @@ class TeacherStudentsListAPIVIew(viewsets.ViewSet):
 
         return Response(students)
 
-@api_view(("GET", ))
-def TeacherAllMonthEarningAPIView(request, teacher_id):
-    teacher = api_models.Teacher.objects.get(id=teacher_id)
-    monthly_earning_tracker = (
-        api_models.CartOrderItem.objects
-        .filter(teacher=teacher, order__payment_status="Paid")
-        .annotate(
-            month=ExtractMonth("date")
-        )
-        .values("month")
-        .annotate(
-            total_earning=models.Sum("price")
-        )
-        .order_by("month")
-    )
-
-    return Response(monthly_earning_tracker)
 
 class TeacherBestSellingCourseAPIView(viewsets.ViewSet):
 
@@ -755,15 +506,6 @@ class TeacherBestSellingCourseAPIView(viewsets.ViewSet):
 
         return Response(courses_with_total_price)
     
-class TeacherCourseOrdersListAPIView(generics.ListAPIView):
-    serializer_class = api_serializer.CartOrderItemSerializer
-    permission_classes = [AllowAny]
-
-    def get_queryset(self):
-        teacher_id = self.kwargs['teacher_id']
-        teacher = api_models.Teacher.objects.get(id=teacher_id)
-
-        return api_models.CartOrderItem.objects.filter(teacher=teacher)
 
 class TeacherQuestionAnswerListAPIView(generics.ListAPIView):
     serializer_class = api_serializer.Question_AnswerSerializer
@@ -774,24 +516,7 @@ class TeacherQuestionAnswerListAPIView(generics.ListAPIView):
         teacher = api_models.Teacher.objects.get(id=teacher_id)
         return api_models.Question_Answer.objects.filter(course__teacher=teacher)
     
-class TeacherCouponListCreateAPIView(generics.ListCreateAPIView):
-    serializer_class = api_serializer.CouponSerializer
-    permission_classes = [AllowAny]
     
-    def get_queryset(self):
-        teacher_id = self.kwargs['teacher_id']
-        teacher = api_models.Teacher.objects.get(id=teacher_id)
-        return api_models.Coupon.objects.filter(teacher=teacher)
-    
-class TeacherCouponDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = api_serializer.CouponSerializer
-    permission_classes = [AllowAny]
-    
-    def get_object(self):
-        teacher_id = self.kwargs['teacher_id']
-        coupon_id = self.kwargs['coupon_id']
-        teacher = api_models.Teacher.objects.get(id=teacher_id)
-        return api_models.Coupon.objects.get(teacher=teacher, id=coupon_id)
     
 class TeacherNotificationListAPIView(generics.ListAPIView):
     serializer_class = api_serializer.NotificationSerializer
@@ -1189,3 +914,11 @@ class StudyGroupMemberViewSet(viewsets.ModelViewSet):
     queryset = api_models.StudyGroupMember.objects.all()
     serializer_class = api_serializer.StudyGroupMemberSerializer
     permission_classes = [IsAuthenticated]
+
+class SearchCourseAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.CourseSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        query = self.request.GET.get('query')
+        return api_models.Course.objects.filter(title__icontains=query, platform_status="Published", teacher_course_status="Published")
