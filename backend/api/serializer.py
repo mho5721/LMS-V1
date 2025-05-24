@@ -278,14 +278,23 @@ class CourseMaterialSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class GroupMessageSerializer(serializers.ModelSerializer):
+    sender_name = serializers.CharField(source="sender.full_name", read_only=True)
+    reply_to_message = serializers.CharField(source="reply_to.message", read_only=True)
+    sender_is_instructor = serializers.BooleanField(source="sender.is_instructor", read_only=True)
+
+
     class Meta:
         model = api_models.GroupMessage
         fields = '__all__'
 
+
+
 class StudyGroupSerializer(serializers.ModelSerializer):
+    course_title = serializers.CharField(source="course.title", read_only=True)
+
     class Meta:
         model = api_models.StudyGroup
-        fields = '__all__'
+        fields = '__all__' 
 
 class StudyGroupMemberSerializer(serializers.ModelSerializer):
     class Meta:

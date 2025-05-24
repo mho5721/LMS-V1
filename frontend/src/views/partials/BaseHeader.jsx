@@ -56,12 +56,12 @@ function BaseHeader() {
 
                             {/* Study Groups */}
                             <li className="nav-item">
-                                <NavLink
-                                    className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
-                                    to="/study-groups/"
-                                >
-                                    <i className="fas fa-users"></i> Study Groups
-                                </NavLink>
+                            <NavLink
+                                className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
+                                to={isInstructor ? "/instructor/study-groups/" : "/student/study-groups/"}
+                            >
+                                <i className="fas fa-users"></i> Study Groups
+                            </NavLink>
                             </li>
 
                             {/* Role Specific - My Progress or Analytics */}

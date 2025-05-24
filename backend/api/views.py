@@ -19,7 +19,8 @@ from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, APIView
+from rest_framework.decorators import api_view, APIView, permission_classes
+
 
 
 import random
@@ -922,3 +923,28 @@ class SearchCourseAPIView(generics.ListAPIView):
     def get_queryset(self):
         query = self.request.GET.get('query')
         return api_models.Course.objects.filter(title__icontains=query, platform_status="Published", teacher_course_status="Published")
+    
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def available_study_groups(request, user_id):
+    course_id = request.GET.get("course_id")
+    user = User.objects.get(id=user_id)
+
+    # Groups not yet joined
+    joined_ids = api_models.StudyGroupMember.objects.filter(user=user).values_list("group_id", flat=True)
+    groups = api_models.StudyGroup.objects.filter(course__id=course_id).exclude(id__in=joined_ids)
+
+    serializer = api_serializer.StudyGroupSerializer(groups, many=True)
+    return Response(serializer.data)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def join_study_group(request):
+    user_id = request.data.get("user_id")
+    group_id = request.data.get("group_id")
+
+    user = User.objects.get(id=user_id)
+    group = api_models.StudyGroup.objects.get(id=group_id)
+
+    api_models.StudyGroupMember.objects.get_or_create(user=user, group=group)
+    return Response({"message": "Joined successfully"})

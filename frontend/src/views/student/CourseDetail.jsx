@@ -57,6 +57,26 @@ function CourseDetail() {
     const handleQuestionClose = () => setAddQuestionShow(false);
     const handleQuestionShow = () => setAddQuestionShow(true);
 
+    const [availableGroups, setAvailableGroups] = useState([]);
+
+    const fetchAvailableGroups = () => {
+    useAxios
+        .get(`/student/study-groups/available/${UserData()?.user_id}/?course_id=${course.course?.id}`)
+        .then((res) => setAvailableGroups(res.data));
+    };
+
+    const handleJoinGroup = (groupId) => {
+    const formData = new FormData();
+    formData.append("user_id", UserData()?.user_id);
+    formData.append("group_id", groupId);
+
+    useAxios.post(`/student/study-groups/join/`, formData).then(() => {
+        fetchAvailableGroups();
+        Toast().fire({ icon: "success", title: "Joined group successfully" });
+    });
+    };
+
+
     const fetchCourseDetail = async () => {
         useAxios.get(`student/course-detail/${UserData()?.user_id}/${param.enrollment_id}/`).then((res) => {
             setCourse(res.data);
@@ -69,6 +89,11 @@ function CourseDetail() {
     useEffect(() => {
         fetchCourseDetail();
     }, []);
+    useEffect(() => {
+        if (course.course?.id) {
+          fetchAvailableGroups();
+        }
+      }, [course]);
 
     console.log(createReview?.rating);
     // console.log(studentReview);
@@ -300,7 +325,7 @@ function CourseDetail() {
 
                                                         <li className="nav-item me-2 me-sm-4" role="presentation">
                                                             <button className="nav-link mb-2 mb-md-0" id="course-pills-tab-4" data-bs-toggle="pill" data-bs-target="#course-pills-4" type="button" role="tab" aria-controls="course-pills-4" aria-selected="false">
-                                                                Leave a Review
+                                                                Study Groups
                                                             </button>
                                                         </li>
                                                     </ul>
@@ -507,64 +532,29 @@ function CourseDetail() {
                                                         </div>
                                                         <div className="tab-pane fade" id="course-pills-4" role="tabpanel" aria-labelledby="course-pills-tab-4">
                                                             <div className="card">
-                                                                {/* Card header */}
                                                                 <div className="card-header border-bottom p-0 pb-3">
-                                                                    {/* Title */}
-                                                                    <h4 className="mb-3 p-3">Leave a Review {studentReview?.rating}</h4>
-                                                                    <div className="mt-2">
-                                                                        {!studentReview && (
-                                                                            <form className="row g-3 p-3" onSubmit={handleCreateReviewSubmit}>
-                                                                                {/* Rating */}
-                                                                                <div className="col-12 bg-light-input">
-                                                                                    <select id="inputState2" className="form-select js-choice" onChange={handleReviewChange} name="rating" defaultValue={studentReview?.rating || 0}>
-                                                                                        <option value={1}>★☆☆☆☆ (1/5)</option>
-                                                                                        <option value={2}>★★☆☆☆ (2/5)</option>
-                                                                                        <option value={3}>★★★☆☆ (3/5)</option>
-                                                                                        <option value={4}>★★★★☆ (4/5)</option>
-                                                                                        <option value={5}>★★★★★ (5/5)</option>
-                                                                                    </select>
-                                                                                </div>
-                                                                                {/* Message */}
-                                                                                <div className="col-12 bg-light-input">
-                                                                                    <textarea className="form-control" id="exampleFormControlTextarea1" placeholder="Your review" rows={3} onChange={handleReviewChange} name="review" defaultValue={studentReview?.review || createReview?.review} />
-                                                                                </div>
-                                                                                {/* Button */}
-                                                                                <div className="col-12">
-                                                                                    <button type="submit" className="btn btn-primary mb-0">
-                                                                                        Post Review
-                                                                                    </button>
-                                                                                </div>
-                                                                            </form>
-                                                                        )}
-
-                                                                        {studentReview && (
-                                                                            <form className="row g-3 p-3" onSubmit={handleUpdateReviewSubmit}>
-                                                                                {/* Rating */}
-                                                                                <div className="col-12 bg-light-input">
-                                                                                    <select id="inputState2" className="form-select js-choice" onChange={handleReviewChange} name="rating" value={course?.review?.rating}>
-                                                                                        <option value={1}>★☆☆☆☆ (1/5)</option>
-                                                                                        <option value={2}>★★☆☆☆ (2/5)</option>
-                                                                                        <option value={3}>★★★☆☆ (3/5)</option>
-                                                                                        <option value={4}>★★★★☆ (4/5)</option>
-                                                                                        <option value={5}>★★★★★ (5/5)</option>
-                                                                                    </select>
-                                                                                </div>
-                                                                                {/* Message */}
-                                                                                <div className="col-12 bg-light-input">
-                                                                                    <textarea className="form-control" id="exampleFormControlTextarea1" placeholder="Your review" rows={3} onChange={handleReviewChange} name="review" defaultValue={studentReview?.review} />
-                                                                                </div>
-                                                                                {/* Button */}
-                                                                                <div className="col-12">
-                                                                                    <button type="submit" className="btn btn-primary mb-0">
-                                                                                        Update Review
-                                                                                    </button>
-                                                                                </div>
-                                                                            </form>
-                                                                        )}
+                                                                <h4 className="mb-3 p-3">Available Study Groups</h4>
+                                                                </div>
+                                                                <div className="card-body">
+                                                                {availableGroups.length > 0 ? (
+                                                                    availableGroups.map((group) => (
+                                                                    <div className="card p-3 mb-3" key={group.id}>
+                                                                        <h5>{group.name}</h5>
+                                                                        <p className="text-muted">
+                                                                        Created on {moment(group.date_created).format("DD MMM, YYYY")}
+                                                                        </p>
+                                                                        <button className="btn btn-primary" onClick={() => handleJoinGroup(group.id)}>
+                                                                        Join Group
+                                                                        </button>
                                                                     </div>
+                                                                    ))
+                                                                ) : (
+                                                                    <p className="p-3">You have joined all study groups for this course.</p>
+                                                                )}
                                                                 </div>
                                                             </div>
-                                                        </div>
+                                                            </div>
+
                                                     </div>
                                                 </div>
                                             </div>

@@ -14,6 +14,8 @@ function StudyGroupDetail() {
     const [group, setGroup] = useState(null);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
+    const [replyTo, setReplyTo] = useState(null);
+    const [replyToText, setReplyToText] = useState("");
     const messagesEndRef = useRef(null);
 
     const fetchGroup = async () => {
@@ -32,10 +34,20 @@ function StudyGroupDetail() {
         formData.append("group", id);
         formData.append("sender", UserData()?.user_id);
         formData.append("message", newMessage);
+        if (replyTo) {
+            formData.append("reply_to", replyTo);
+        }
 
         await useAxios.post(`/study-group-messages/`, formData);
         setNewMessage("");
+        setReplyTo(null);
+        setReplyToText("");
         fetchMessages();
+    };
+
+    const handleReply = (msg) => {
+        setReplyTo(msg.id);
+        setReplyToText(msg.message);
     };
 
     useEffect(() => {
@@ -68,9 +80,26 @@ function StudyGroupDetail() {
                                         {messages.map((msg) => (
                                             <li key={msg.id} className="mb-3">
                                                 <div className="bg-light p-3 rounded">
-                                                    <strong>{msg.sender_name || "User"}</strong>
+                                                <strong>
+                                                {msg.sender_name || "User"}
+                                                {msg.sender_is_instructor && (
+                                                    <span className="badge bg-info text-dark ms-2">Instructor</span>
+                                                )}
+                                                </strong>
+
+                                                    {msg.reply_to_message && (
+                                                        <div className="small text-muted mb-1">
+                                                            ↪ replying to: <em>{msg.reply_to_message}</em>
+                                                        </div>
+                                                    )}
                                                     <p className="mb-1">{msg.message}</p>
-                                                    <small className="text-muted">{moment(msg.sent_at).format("DD MMM, YYYY HH:mm")}</small>
+                                                    <small className="text-muted d-block mb-1">{moment(msg.sent_at).format("DD MMM, YYYY HH:mm")}</small>
+                                                    <button
+                                                        className="btn btn-sm btn-outline-primary"
+                                                        onClick={() => handleReply(msg)}
+                                                    >
+                                                        Reply
+                                                    </button>
                                                 </div>
                                             </li>
                                         ))}
@@ -78,6 +107,11 @@ function StudyGroupDetail() {
                                     </ul>
                                 </div>
                                 <div className="card-footer">
+                                    {replyTo && (
+                                        <div className="mb-2 text-muted">
+                                            Replying to: <em>{replyToText}</em> <button onClick={() => { setReplyTo(null); setReplyToText(""); }} className="btn btn-sm btn-link">Cancel</button>
+                                        </div>
+                                    )}
                                     <form onSubmit={handleSendMessage} className="d-flex">
                                         <textarea
                                             className="form-control me-2"

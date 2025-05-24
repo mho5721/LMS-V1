@@ -45,6 +45,8 @@ urlpatterns = [
     path("student/wishlist/<user_id>/", api_views.StudentWishListListCreateAPIView.as_view()),
     path("student/question-answer-list-create/<course_id>/", api_views.QuestionAnswerListCreateAPIView.as_view()),
     path("student/question-answer-message-create/", api_views.QuestionAnswerMessageSendAPIView.as_view()),
+    path("student/study-groups/available/<int:user_id>/", api_views.available_study_groups),
+    path("student/study-groups/join/", api_views.join_study_group),
 
 
     # Teacher Routes
