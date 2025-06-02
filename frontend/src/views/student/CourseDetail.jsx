@@ -86,16 +86,35 @@ function CourseDetail() {
             setCompletionPercentage(percentageCompleted?.toFixed(0));
         });
     };
+
+    const [materials, setMaterials] = useState([]);
+
+
+    const fetchCourseMaterials = async () => {
+    const courseId = course.course?.course_id;
+    if (!courseId) return;
+
+    try {
+        const res = await useAxios.get(`/course/${courseId}/materials/`);
+        setMaterials(res.data);
+        console.log("Material IDs:", res.data.map((m) => m.id));
+        
+    } catch (error) {
+        console.error("Failed to load course materials", error);
+    }
+    };
+
+
     useEffect(() => {
         fetchCourseDetail();
     }, []);
     useEffect(() => {
         if (course.course?.id) {
-          fetchAvailableGroups();
+            fetchAvailableGroups();
+            fetchCourseMaterials();  
         }
       }, [course]);
 
-    console.log(createReview?.rating);
     // console.log(studentReview);
     const handleMarkLessonAsCompleted = (variantItemId) => {
         const key = `lecture_${variantItemId}`;
@@ -278,6 +297,7 @@ function CourseDetail() {
         });
     };
 
+
     return (
         <>
             <BaseHeader />
@@ -355,7 +375,7 @@ function CourseDetail() {
                                                                 {/* Item */}
 
                                                                 {course?.curriculum?.map((c, index) => (
-                                                                    <div className="accordion-item mb-3 p-3 bg-light">
+                                                                    <div className="accordion-item mb-3 p-3 bg-light" key={c.variant_id || index}>
                                                                         <h6 className="accordion-header font-base" id="heading-1">
                                                                             <button
                                                                                 className="accordfion-button p-3 w-100 bg-light btn border fw-bold rounded d-sm-flex d-inline-block collapsed"
@@ -373,35 +393,43 @@ function CourseDetail() {
                                                                             </button>
                                                                         </h6>
 
-                                                                        <div id={`collapse-${c.variant_id}`} className="accordion-collapse collapse show" aria-labelledby="heading-1" data-bs-parent="#accordionExample2">
-                                                                            <div className="accordion-body mt-3">
+                                                                        <div className="accordion-collapse collapse show" aria-labelledby="heading-1" data-bs-parent="#accordionExample2">
+                                                                        <div className="accordion-body mt-3">
                                                                                 {/* Course lecture */}
-                                                                                {c.variant_items?.map((l, index) => (
-                                                                                    <>
-                                                                                        <div className="d-flex justify-content-between align-items-center">
-                                                                                            <div className="position-relative d-flex align-items-center">
-                                                                                                <button onClick={() => handleShow(l)} className="btn btn-danger-soft btn-round btn-sm mb-0 stretched-link position-static">
-                                                                                                    <i className="fas fa-play me-0" />
-                                                                                                </button>
-                                                                                                <span className="d-inline-block text-truncate ms-2 mb-0 h6 fw-light w-100px w-sm-200px w-md-400px">{l.title}</span>
-                                                                                            </div>
-                                                                                            <div className="d-flex">
-                                                                                                <p className="mb-0">{l.content_duration || "0m 0s"}</p>
-                                                                                                <input
-                                                                                                    type="checkbox"
-                                                                                                    className="form-check-input ms-2"
-                                                                                                    name=""
-                                                                                                    id=""
-                                                                                                    onChange={() => handleMarkLessonAsCompleted(l.variant_item_id)}
-                                                                                                    checked={course.completed_lesson?.some((cl) => cl.variant_item.id === l.id)}
-                                                                                                />
-                                                                                            </div>
-                                                                                        </div>
-                                                                                        <hr />
-                                                                                    </>
-                                                                                ))}
+                                                                                
+                                                                                {materials.length > 0 ? (
+                                                                                    
+                                                                                materials.map((material) => (
+                                                                                    <div key={material.id} className="mb-3 p-3 border rounded">
+                                                                                    <h6>{material.title}</h6>
+
+                                                                                    {/* File preview */}
+                                                                                    {material.file.endsWith(".mp4") ? (
+                                                                                        <video width="100%" controls>
+                                                                                        <source src={material.file} type="video/mp4" />
+                                                                                        Your browser does not support the video tag.
+                                                                                        </video>
+                                                                                    ) : (
+                                                                                        <img src={material.file} alt={material.title} className="img-fluid mb-2" />
+                                                                                    )}
+
+                                                                                    {/* Download button */}
+                                                                                    <a
+                                                                                        href={material.file}
+                                                                                        className="btn btn-sm btn-primary mt-2"
+                                                                                        target="_blank"
+                                                                                        rel="noopener noreferrer"
+                                                                                    >
+                                                                                        Download
+                                                                                    </a>
+                                                                                    </div>
+                                                                                ))
+                                                                                ) : (
+                                                                                <p className="text-muted">No course materials available.</p>
+                                                                                )}
                                                                             </div>
                                                                         </div>
+
                                                                     </div>
                                                                 ))}
                                                             </div>
@@ -456,7 +484,7 @@ function CourseDetail() {
                                                                 <div className="card-body p-0 pt-3">
                                                                     {/* Note item start */}
                                                                     {course?.note?.map((n, index) => (
-                                                                        <div className="row g-4 p-3">
+                                                                        <div className="row g-4 p-3" key={n.id || index}>
                                                                             <div className="col-sm-11 col-xl-11 shadow p-3 m-3 rounded">
                                                                                 <h5> {n.title}</h5>
                                                                                 <p>{n.note}</p>
@@ -506,7 +534,7 @@ function CourseDetail() {
                                                                     <div className="vstack gap-3 p-3">
                                                                         {/* Question item START */}
                                                                         {questions?.map((q, index) => (
-                                                                            <div className="shadow rounded-3 p-3" key={index}>
+                                                                            <div className="shadow rounded-3 p-3" key={q.qa_id || index}>
                                                                                 <div className="d-sm-flex justify-content-sm-between mb-3">
                                                                                     <div className="d-flex align-items-center">
                                                                                         <div className="avatar avatar-sm flex-shrink-0"></div>
@@ -620,7 +648,7 @@ function CourseDetail() {
                     <div className="border p-2 p-sm-4 rounded-3">
                         <ul className="list-unstyled mb-0" style={{ overflowY: "scroll", height: "500px" }}>
                             {selectedConversation?.messages?.map((m, index) => (
-                                <li className="comment-item mb-3">
+                                <li className="comment-item mb-3" key={m.id || index}>
                                     <div className="d-flex">
                                         <div className="ms-2">
                                             {/* Comment by */}

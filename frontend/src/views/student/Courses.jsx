@@ -110,16 +110,6 @@ function Courses() {
                                                                             {c.course.title}
                                                                         </a>
                                                                     </h4>
-                                                                    <ul className="list-inline fs-6 mb-0">
-                                                                        <li className="list-inline-item">
-                                                                            <i className="fas fa-user"></i>
-                                                                            <span className="ms-1">{c.course.language}</span>
-                                                                        </li>
-                                                                        <li className="list-inline-item">
-                                                                            <i className="bi bi-reception-4"></i>
-                                                                            <span className="ms-1"> {c.course.level}</span>
-                                                                        </li>
-                                                                    </ul>
                                                                 </div>
                                                             </div>
                                                         </td>
@@ -134,17 +124,17 @@ function Courses() {
                                                         </td>
                                                         <td>
                                                             {c.completed_lesson?.length < 1 && (
-                                                                <button className="btn btn-success btn-sm mt-3">
+                                                                <Link to={`/student/courses/${c.enrollment_id}/`} className="btn btn-success btn-sm mt-3">
                                                                     start Course
                                                                     <i className="fas fa-arrow-right ms-2"></i>
-                                                                </button>
+                                                                </Link>
                                                             )}
 
                                                             {c.completed_lesson?.length > 0 && (
-                                                                <button className="btn btn-primary btn-sm mt-3">
+                                                                <Link to={`/student/courses/${c.enrollment_id}/`} className="btn btn-primary btn-sm mt-3">
                                                                     Continue Course
                                                                     <i className="fas fa-arrow-right ms-2"></i>
-                                                                </button>
+                                                                </Link>
                                                             )}
                                                         </td>
                                                     </tr>

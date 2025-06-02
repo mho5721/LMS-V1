@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import moment from "moment";
 
 import Sidebar from "./Partials/Sidebar";
@@ -8,15 +8,20 @@ import BaseHeader from "../partials/BaseHeader";
 
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
+import Toast from "../plugin/Toast";
 
 function StudyGroupDetail() {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [group, setGroup] = useState(null);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
     const [replyTo, setReplyTo] = useState(null);
     const [replyToText, setReplyToText] = useState("");
+    const [members, setMembers] = useState([]);
     const messagesEndRef = useRef(null);
+
+    const isCreator = group?.created_by === UserData()?.user_id;
 
     const fetchGroup = async () => {
         const res = await useAxios.get(`/study-groups/${id}/`);
@@ -26,6 +31,22 @@ function StudyGroupDetail() {
     const fetchMessages = async () => {
         const res = await useAxios.get(`/study-group-messages/?group=${id}`);
         setMessages(res.data);
+    };
+
+    const fetchMembers = async () => {
+        const res = await useAxios.get(`/study-group-members/?group=${id}`);
+        setMembers(res.data);
+    };
+
+    const checkMembership = async () => {
+        const res = await useAxios.get(`/study-group-members/?group=${id}`);
+        const memberIds = res.data.map((m) => m.user);
+        const isMember = memberIds.includes(UserData()?.user_id);
+
+        if (!isMember) {
+            Toast().fire({ icon: "error", title: "You are not a member of this group" });
+            navigate("/student/study-groups/");
+        }
     };
 
     const handleSendMessage = async (e) => {
@@ -50,9 +71,55 @@ function StudyGroupDetail() {
         setReplyToText(msg.message);
     };
 
+    const handleLeaveGroup = async () => {
+        const formData = new FormData();
+        formData.append("user_id", UserData()?.user_id);
+        formData.append("group_id", id);
+      
+        try {
+          await useAxios.post(`/student/study-groups/leave/`, formData);
+          Toast().fire({ icon: "success", title: "Left the group" });
+      
+          // Wait a short time to ensure state update or background fetch doesn't override
+          setTimeout(() => {
+            navigate("/student/study-groups/");
+          }, 300);
+        } catch (err) {
+          Toast().fire({ icon: "error", title: "Something went wrong" });
+        }
+      };
+      
+
+      const handleRemoveMember = (memberId) => {
+        const formData = new FormData();
+        formData.append("user_id", memberId);
+        formData.append("group_id", id);
+        formData.append("requester_id", UserData()?.user_id);
+      
+        useAxios.post(`/student/study-groups/remove-member/`, formData).then(() => {
+          fetchMembers();
+          Toast().fire({ icon: "info", title: "Member removed" });
+      
+          if (memberId === UserData()?.user_id) {
+            Toast().fire({ icon: "info", title: "You left the group" });
+            navigate("/student/study-groups/");
+          }
+        });
+      };
+      
+
+    const handleDeleteGroup = () => {
+        useAxios.delete(`/student/study-groups/delete/${id}/`).then(() => {
+            Toast().fire({ icon: "success", title: "Study group deleted" });
+            navigate("/student/study-groups/");
+        });
+    };
+
     useEffect(() => {
         fetchGroup();
         fetchMessages();
+        fetchMembers();
+        checkMembership();
     }, [id]);
 
     useEffect(() => {
@@ -74,19 +141,49 @@ function StudyGroupDetail() {
                                 <i className="fas fa-comments"></i> {group?.name} Discussion
                             </h4>
 
+                            <div className="d-flex justify-content-between mb-3">
+                                <button className="btn btn-outline-danger" onClick={handleLeaveGroup}>Leave Group</button>
+                                {isCreator && (
+                                    <button className="btn btn-danger" onClick={handleDeleteGroup}>Delete Group</button>
+                                )}
+                            </div>
+
+                            {isCreator && (
+                                <div className="card mb-4">
+                                    <div className="card-header">Members</div>
+                                    <div className="card-body">
+                                        <ul className="list-group">
+                                            {members.map((m) => (
+                                                <li key={m.id} className="list-group-item d-flex justify-content-between align-items-center">
+                                                    {m.user_name || `User #${m.user}`}
+                                                    {m.user_is_instructor && (
+                                                        <span className="badge bg-info text-dark ms-2">Instructor</span>
+                                                    )}
+                                                    <button
+                                                        className="btn btn-sm btn-outline-danger"
+                                                        onClick={() => handleRemoveMember(m.user)}
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="card">
                                 <div className="card-body" style={{ height: "500px", overflowY: "auto" }}>
                                     <ul className="list-unstyled">
                                         {messages.map((msg) => (
                                             <li key={msg.id} className="mb-3">
                                                 <div className="bg-light p-3 rounded">
-                                                <strong>
-                                                {msg.sender_name || "User"}
-                                                {msg.sender_is_instructor && (
-                                                    <span className="badge bg-info text-dark ms-2">Instructor</span>
-                                                )}
-                                                </strong>
-
+                                                    <strong>
+                                                        {msg.sender_name || "User"}
+                                                        {msg.sender_is_instructor && (
+                                                            <span className="badge bg-info text-dark ms-2">Instructor</span>
+                                                        )}
+                                                    </strong>
                                                     {msg.reply_to_message && (
                                                         <div className="small text-muted mb-1">
                                                             ↪ replying to: <em>{msg.reply_to_message}</em>

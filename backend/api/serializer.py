@@ -297,6 +297,10 @@ class StudyGroupSerializer(serializers.ModelSerializer):
         fields = '__all__' 
 
 class StudyGroupMemberSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source="user.full_name", read_only=True)
+    user_is_instructor = serializers.BooleanField(source="user.is_instructor", read_only=True)
+    group = StudyGroupSerializer(read_only=True)
+
     class Meta:
         model = api_models.StudyGroupMember
         fields = '__all__'

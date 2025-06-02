@@ -904,17 +904,58 @@ class StudyGroupViewSet(viewsets.ModelViewSet):
     serializer_class = api_serializer.StudyGroupSerializer
     permission_classes = [IsAuthenticated]
 
+    def perform_create(self, serializer):
+        group = serializer.save(created_by=self.request.user)
+        api_models.StudyGroupMember.objects.get_or_create(user=self.request.user, group=group)
+
+
 
 class GroupMessageViewSet(viewsets.ModelViewSet):
-    queryset = api_models.GroupMessage.objects.all()
+    queryset = api_models.GroupMessage.objects.all()  # ✅ Required for DRF router
     serializer_class = api_serializer.GroupMessageSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        group_id = self.request.query_params.get("group")
+        if not group_id:
+            return api_models.GroupMessage.objects.none()
+
+        is_member = api_models.StudyGroupMember.objects.filter(
+            group_id=group_id, user=self.request.user
+        ).exists()
+
+        if not is_member:
+            return api_models.GroupMessage.objects.none()
+
+        return api_models.GroupMessage.objects.filter(group_id=group_id)
+
+    
+
 
 class StudyGroupMemberViewSet(viewsets.ModelViewSet):
-    queryset = api_models.StudyGroupMember.objects.all()
+    queryset = api_models.StudyGroupMember.objects.all() 
     serializer_class = api_serializer.StudyGroupMemberSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        group_id = self.request.query_params.get("group")
+        user_id = self.request.query_params.get("user")
+
+        if group_id:
+            is_member = api_models.StudyGroupMember.objects.filter(
+                group_id=group_id, user=self.request.user
+            ).exists()
+            if not is_member:
+                return api_models.StudyGroupMember.objects.none()
+            return api_models.StudyGroupMember.objects.filter(group_id=group_id)
+
+        if user_id:
+            return api_models.StudyGroupMember.objects.filter(user__id=user_id)
+
+        return api_models.StudyGroupMember.objects.none()
+
+
+
 
 class SearchCourseAPIView(generics.ListAPIView):
     serializer_class = api_serializer.CourseSerializer
@@ -948,3 +989,37 @@ def join_study_group(request):
 
     api_models.StudyGroupMember.objects.get_or_create(user=user, group=group)
     return Response({"message": "Joined successfully"})
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def leave_study_group(request):
+    user_id = request.data.get("user_id")
+    group_id = request.data.get("group_id")
+
+    api_models.StudyGroupMember.objects.filter(user_id=user_id, group_id=group_id).delete()
+    return Response({"message": "Left the group"})
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def remove_member(request):
+    user_id = request.data.get("user_id")
+    group_id = request.data.get("group_id")
+    requester_id = request.data.get("requester_id")
+
+    group = api_models.StudyGroup.objects.get(id=group_id)
+    if group.created_by_id != int(requester_id):
+        return Response({"error": "Only the creator can remove members"}, status=403)
+
+    api_models.StudyGroupMember.objects.filter(group=group, user_id=user_id).delete()
+    return Response({"message": "Member removed"})
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_study_group(request, group_id):
+    group = api_models.StudyGroup.objects.get(id=group_id)
+
+    if group.created_by_id != request.user.id:
+        return Response({"error": "Only the creator can delete the group"}, status=403)
+
+    group.delete()
+    return Response({"message": "Study group deleted"})
