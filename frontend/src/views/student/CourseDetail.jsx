@@ -356,84 +356,80 @@ function CourseDetail() {
                                                     <div className="tab-content" id="course-pills-tabContent">
                                                         {/* Content START */}
                                                         <div className="tab-pane fade show active" id="course-pills-1" role="tabpanel" aria-labelledby="course-pills-tab-1">
-                                                            {/* Accordion START */}
-                                                            <div className="accordion accordion-icon accordion-border" id="accordionExample2">
-                                                                <div className="progress mb-3">
-                                                                    <div
-                                                                        className="progress-bar"
-                                                                        role="progressbar"
-                                                                        style={{
-                                                                            width: `${completionPercentage}%`,
-                                                                        }}
-                                                                        aria-valuenow={completionPercentage}
-                                                                        aria-valuemin={0}
-                                                                        aria-valuemax={100}
+                                                        {/* Accordion START */}
+                                                        <div className="accordion accordion-icon accordion-border" id="accordionExample2">
+                                                        <div className="progress mb-3">
+                                                            {/* Progress bar logic if needed */}
+                                                        </div>
+
+                                                        <div className="accordion-item mb-3 p-3 bg-light">
+                                                            <h6 className="accordion-header font-base" id="heading-materials">
+                                                            <button
+                                                                className="accordion-button p-3 w-100 bg-light btn border fw-bold rounded d-sm-flex d-inline-block collapsed"
+                                                                type="button"
+                                                                data-bs-toggle="collapse"
+                                                                data-bs-target="#collapse-materials"
+                                                                aria-expanded="true"
+                                                                aria-controls="collapse-materials"
+                                                            >
+                                                                Course Materials
+                                                                <span className="small ms-0 ms-sm-2">({materials.length} Item{materials.length !== 1 && "s"})</span>
+                                                            </button>
+                                                            </h6>
+
+                                                            <div
+                                                            id="collapse-materials"
+                                                            className="accordion-collapse collapse show"
+                                                            aria-labelledby="heading-materials"
+                                                            data-bs-parent="#accordionExample2"
+                                                            >
+                                                            <div className="accordion-body mt-3">
+                                                                {materials.length > 0 ? (
+                                                                materials.map((material) => (
+                                                                    <div key={material.id} className="mb-3 p-3 border rounded">
+                                                                    <h6>{material.title}</h6>
+
+                                                                    {/* File preview */}
+                                                                    {material.file.endsWith(".mp4") ? (
+                                                                    <video width="100%" controls>
+                                                                        <source src={material.file} type="video/mp4" />
+                                                                        Your browser does not support the video tag.
+                                                                    </video>
+                                                                    ) : material.file.match(/\.(jpe?g|png|gif)$/i) ? (
+                                                                    <img
+                                                                        src={material.file}
+                                                                        alt={material.title}
+                                                                        className="img-fluid mb-2"
+                                                                        style={{ maxHeight: "200px", objectFit: "contain" }}
+                                                                    />
+                                                                    ) : (
+                                                                    <p className="text-muted mb-2">
+                                                                        No preview available for this file type.
+                                                                    </p>
+                                                                    )}
+
+
+
+                                                                    {/* View button */}
+                                                                    <a
+                                                                        href={material.file}
+                                                                        className="btn btn-sm btn-primary mt-2"
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
                                                                     >
-                                                                        {completionPercentage}%
+                                                                        View
+                                                                    </a>
                                                                     </div>
-                                                                </div>
-                                                                {/* Item */}
-
-                                                                {course?.curriculum?.map((c, index) => (
-                                                                    <div className="accordion-item mb-3 p-3 bg-light" key={c.variant_id || index}>
-                                                                        <h6 className="accordion-header font-base" id="heading-1">
-                                                                            <button
-                                                                                className="accordfion-button p-3 w-100 bg-light btn border fw-bold rounded d-sm-flex d-inline-block collapsed"
-                                                                                type="button"
-                                                                                data-bs-toggle="collapse"
-                                                                                data-bs-target={`#collapse-${c.variant_id}`}
-                                                                                aria-expanded="true"
-                                                                                aria-controls={`collapse-${c.variant_id}`}
-                                                                            >
-                                                                                {c.title}
-                                                                                <span className="small ms-0 ms-sm-2">
-                                                                                    ({c.variant_items?.length} Lecture
-                                                                                    {c.variant_items?.length > 1 && "s"})
-                                                                                </span>
-                                                                            </button>
-                                                                        </h6>
-
-                                                                        <div className="accordion-collapse collapse show" aria-labelledby="heading-1" data-bs-parent="#accordionExample2">
-                                                                        <div className="accordion-body mt-3">
-                                                                                {/* Course lecture */}
-                                                                                
-                                                                                {materials.length > 0 ? (
-                                                                                    
-                                                                                materials.map((material) => (
-                                                                                    <div key={material.id} className="mb-3 p-3 border rounded">
-                                                                                    <h6>{material.title}</h6>
-
-                                                                                    {/* File preview */}
-                                                                                    {material.file.endsWith(".mp4") ? (
-                                                                                        <video width="100%" controls>
-                                                                                        <source src={material.file} type="video/mp4" />
-                                                                                        Your browser does not support the video tag.
-                                                                                        </video>
-                                                                                    ) : (
-                                                                                        <img src={material.file} alt={material.title} className="img-fluid mb-2" />
-                                                                                    )}
-
-                                                                                    {/* Download button */}
-                                                                                    <a
-                                                                                        href={material.file}
-                                                                                        className="btn btn-sm btn-primary mt-2"
-                                                                                        target="_blank"
-                                                                                        rel="noopener noreferrer"
-                                                                                    >
-                                                                                        Download
-                                                                                    </a>
-                                                                                    </div>
-                                                                                ))
-                                                                                ) : (
-                                                                                <p className="text-muted">No course materials available.</p>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-
-                                                                    </div>
-                                                                ))}
+                                                                ))
+                                                                ) : (
+                                                                <p className="text-muted">No course materials available.</p>
+                                                                )}
                                                             </div>
-                                                            {/* Accordion END */}
+                                                            </div>
+                                                        </div>
+                                                        </div>
+                                                        {/* Accordion END */}
+
                                                         </div>
 
                                                         <div className="tab-pane fade" id="course-pills-2" role="tabpanel" aria-labelledby="course-pills-tab-2">

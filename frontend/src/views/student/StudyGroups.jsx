@@ -49,11 +49,15 @@ function StudyGroups() {
           <div className="row mt-0 mt-md-4">
             <Sidebar />
             <div className="col-lg-9 col-md-8 col-12">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h4 className="mb-0">
-                  <i className="fas fa-users"></i> My Study Groups
-                </h4>
-              </div>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h4 className="mb-0">
+                <i className="fas fa-users"></i> My Study Groups
+              </h4>
+              <Link to="/student/study-groups/create" className="btn btn-success">
+                + Create Group
+              </Link>
+            </div>
+
               <div className="mb-4">
                 <input
                   type="text"

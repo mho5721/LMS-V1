@@ -18,8 +18,9 @@ function InstructorCreateStudyGroup() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        useAxios.get(`/instructor/course-list/${UserData()?.user_id}/`).then((res) => {
-            setCourses(res.data.map((c) => ({ id: c.course.id, title: c.course.title })));
+        useAxios.get(`/teacher/course-lists/${UserData()?.teacher_id}/`).then((res) => {
+            setCourses(res.data.map((c) => ({ id: c.id, title: c.title })));
+
         });
     }, []);
 

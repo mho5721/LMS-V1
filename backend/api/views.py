@@ -973,7 +973,12 @@ def available_study_groups(request, user_id):
 
     # Groups not yet joined
     joined_ids = api_models.StudyGroupMember.objects.filter(user=user).values_list("group_id", flat=True)
-    groups = api_models.StudyGroup.objects.filter(course__id=course_id).exclude(id__in=joined_ids)
+    from django.db.models import Q
+    groups = api_models.StudyGroup.objects.filter(
+        course__id=course_id
+    ).filter(
+        Q(created_by=user) | ~Q(id__in=joined_ids)
+    )
 
     serializer = api_serializer.StudyGroupSerializer(groups, many=True)
     return Response(serializer.data)
