@@ -43,6 +43,7 @@ import CreateStudyGroup from "./views/student/CreateStudyGroup";
 import InstructorStudyGroups from "./views/instructor/InstructorStudyGroups";
 import InstructorStudyGroupDetail from "./views/instructor/InstructorStudyGroupDetail";
 import InstructorCreateStudyGroup from "./views/instructor/InstructorCreateStudyGroup";
+import InstructorCourseDetail from "./views/instructor/InstructorCourseDetail";
 
 function App() {
     const [profile, setProfile] = useState([]);
@@ -242,6 +243,16 @@ useEffect(() => {
                                 </ProtectedRoute>
                             }
                             />
+                            <Route
+                            path="/instructor/course-detail/:course_id/"
+                            element={
+                                <ProtectedRoute allowedRole="instructor">
+                                <InstructorCourseDetail />
+                                </ProtectedRoute>
+                            }
+                            />
+                            
+                        
                         </Routes>
                     </MainWrapper>
                 </BrowserRouter>

@@ -73,8 +73,6 @@ function Courses() {
                                             <tr>
                                                 <th>Courses</th>
                                                 <th>Enrolled</th>
-                                                <th>Level</th>
-                                                <th>Status</th>
                                                 <th>Date Created</th>
                                                 <th>Action</th>
                                                 <th />
@@ -106,37 +104,11 @@ function Courses() {
                                                                         {c.title}
                                                                     </a>
                                                                 </h4>
-                                                                <ul className="list-inline fs-6 mb-0">
-                                                                    <li className="list-inline-item">
-                                                                        <small>
-                                                                            <i className="fas fa-user"></i>
-                                                                            <span className="ms-1">{c.language}</span>
-                                                                        </small>
-                                                                    </li>
-                                                                    <li className="list-inline-item">
-                                                                        <small>
-                                                                            <i className="bi bi-reception-4"></i>
-                                                                            <span className="ms-1">{c.level}</span>
-                                                                        </small>
-                                                                    </li>
-                                                                    <li className="list-inline-item">
-                                                                        <small>
-                                                                            <i className="fas fa-dollar-sign"></i>
-                                                                            <span>{c.price}</span>
-                                                                        </small>
-                                                                    </li>
-                                                                </ul>
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td>
                                                         <p className="mt-3">{c.students?.length}</p>
-                                                    </td>
-                                                    <td>
-                                                        <p className="mt-3 badge bg-success">{c.level}</p>
-                                                    </td>
-                                                    <td>
-                                                        <p className="mt-3 badge bg-warning text-dark">Intermediate</p>
                                                     </td>
                                                     <td>
                                                         <p className="mt-3">{moment(c.date).format("DD MMM, YYYY")}</p>
@@ -148,9 +120,9 @@ function Courses() {
                                                         <button className="btn btn-danger btn-sm mt-3 me-1">
                                                             <i className="fas fa-trash"></i>
                                                         </button>
-                                                        <button className="btn btn-secondary btn-sm mt-3 me-1">
+                                                        <Link to={`/instructor/course-detail/${c.course_id}/`} className="btn btn-secondary btn-sm mt-3 me-1">
                                                             <i className="fas fa-eye"></i>
-                                                        </button>
+                                                        </Link>
                                                     </td>
                                                 </tr>
                                             ))}

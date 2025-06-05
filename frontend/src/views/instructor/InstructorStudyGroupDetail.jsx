@@ -17,6 +17,10 @@ function InstructorStudyGroupDetail() {
     const [messages, setMessages] = useState([]);
     const [members, setMembers] = useState([]);
     const messagesEndRef = useRef(null);
+    const [newMessage, setNewMessage] = useState("");
+    const [replyTo, setReplyTo] = useState(null);
+    const [replyToText, setReplyToText] = useState("");
+
 
     const fetchGroup = async () => {
         const res = await useAxios.get(`/study-groups/${id}/`);
@@ -48,7 +52,7 @@ function InstructorStudyGroupDetail() {
         formData.append("group_id", id);
         formData.append("requester_id", UserData()?.user_id);
 
-        useAxios.post(`/student/study-groups/remove-member/`, formData).then(() => {
+        useAxios.post(`/study-groups/remove-member/`, formData).then(() => {
             if (memberId === UserData()?.user_id) {
                 Toast().fire({ icon: "info", title: "You left the group" });
                 navigate("/instructor/study-groups/");
@@ -58,6 +62,27 @@ function InstructorStudyGroupDetail() {
             }
         });
     };
+
+    const handleSendMessage = async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append("group", id);
+        formData.append("sender", UserData()?.user_id);
+        formData.append("message", newMessage);
+        if (replyTo) formData.append("reply_to", replyTo);
+    
+        await useAxios.post(`/study-group-messages/`, formData);
+        setNewMessage("");
+        setReplyTo(null);
+        setReplyToText("");
+        fetchMessages();
+    };
+    
+    const handleReply = (msg) => {
+        setReplyTo(msg.id);
+        setReplyToText(msg.message);
+    };
+    
 
     useEffect(() => {
         fetchGroup();
@@ -112,16 +137,54 @@ function InstructorStudyGroupDetail() {
                                     <ul className="list-unstyled">
                                         {messages.map((msg) => (
                                             <li key={msg.id} className="mb-3">
-                                                <div className="bg-light p-3 rounded">
-                                                    <strong>{msg.sender_name || "User"}</strong>
-                                                    <p className="mb-1">{msg.message}</p>
-                                                    <small className="text-muted">{moment(msg.sent_at).format("DD MMM, YYYY HH:mm")}</small>
-                                                </div>
+                                            <div className="bg-light p-3 rounded">
+                                                <strong>
+                                                    {msg.sender_name || "User"}
+                                                    {msg.sender_is_instructor && (
+                                                        <span className="badge bg-info text-dark ms-2">Instructor</span>
+                                                    )}
+                                                </strong>
+                                                {msg.reply_to_message && (
+                                                    <div className="small text-muted mb-1">
+                                                        ↪ replying to: <em>{msg.reply_to_message}</em>
+                                                    </div>
+                                                )}
+                                                <p className="mb-1">{msg.message}</p>
+                                                <small className="text-muted d-block">{moment(msg.sent_at).format("DD MMM, YYYY HH:mm")}</small>
+                                                <button
+                                                    className="btn btn-sm btn-outline-secondary mt-2"
+                                                    onClick={() => handleReply(msg)}
+                                                >
+                                                    Reply
+                                                </button>
+                                            </div>
+
                                             </li>
                                         ))}
                                         <div ref={messagesEndRef} />
                                     </ul>
                                 </div>
+                                <div className="card-footer">
+                                    {replyTo && (
+                                        <div className="mb-2 text-muted">
+                                            Replying to: <em>{replyToText}</em>{" "}
+                                            <button onClick={() => { setReplyTo(null); setReplyToText(""); }} className="btn btn-sm btn-link">Cancel</button>
+                                        </div>
+                                    )}
+                                    <form onSubmit={handleSendMessage} className="d-flex">
+                                        <textarea
+                                            className="form-control me-2"
+                                            rows="1"
+                                            placeholder="Type your message..."
+                                            value={newMessage}
+                                            onChange={(e) => setNewMessage(e.target.value)}
+                                        ></textarea>
+                                        <button type="submit" className="btn btn-primary">
+                                            Send <i className="fas fa-paper-plane"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
                             </div>
 
                         </div>

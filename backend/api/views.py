@@ -920,12 +920,13 @@ class GroupMessageViewSet(viewsets.ModelViewSet):
         if not group_id:
             return api_models.GroupMessage.objects.none()
 
-        is_member = api_models.StudyGroupMember.objects.filter(
-            group_id=group_id, user=self.request.user
-        ).exists()
+        group = api_models.StudyGroup.objects.get(id=group_id)
+        is_creator = group.created_by == self.request.user
+        is_member = api_models.StudyGroupMember.objects.filter(group_id=group_id, user=self.request.user).exists()
 
-        if not is_member:
+        if not (is_creator or is_member):
             return api_models.GroupMessage.objects.none()
+
 
         return api_models.GroupMessage.objects.filter(group_id=group_id)
 
@@ -942,11 +943,13 @@ class StudyGroupMemberViewSet(viewsets.ModelViewSet):
         user_id = self.request.query_params.get("user")
 
         if group_id:
-            is_member = api_models.StudyGroupMember.objects.filter(
-                group_id=group_id, user=self.request.user
-            ).exists()
-            if not is_member:
+            group = api_models.StudyGroup.objects.get(id=group_id)
+            is_creator = group.created_by == self.request.user
+            is_member = api_models.StudyGroupMember.objects.filter(group_id=group_id, user=self.request.user).exists()
+
+            if not (is_creator or is_member):
                 return api_models.StudyGroupMember.objects.none()
+
             return api_models.StudyGroupMember.objects.filter(group_id=group_id)
 
         if user_id:
@@ -973,50 +976,74 @@ def available_study_groups(request, user_id):
 
     # Groups not yet joined
     joined_ids = api_models.StudyGroupMember.objects.filter(user=user).values_list("group_id", flat=True)
-    from django.db.models import Q
+    created_ids = api_models.StudyGroup.objects.filter(created_by=user).values_list("id", flat=True)
+    excluded_ids = list(joined_ids) + list(created_ids)
+
     groups = api_models.StudyGroup.objects.filter(
         course__id=course_id
-    ).filter(
-        Q(created_by=user) | ~Q(id__in=joined_ids)
-    )
+    ).exclude(id__in=excluded_ids)
+
+
 
     serializer = api_serializer.StudyGroupSerializer(groups, many=True)
     return Response(serializer.data)
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
 def join_study_group(request):
     user_id = request.data.get("user_id")
     group_id = request.data.get("group_id")
 
-    user = User.objects.get(id=user_id)
-    group = api_models.StudyGroup.objects.get(id=group_id)
+    try:
+        group = api_models.StudyGroup.objects.get(id=group_id)
+        user = User.objects.get(id=user_id)
 
-    api_models.StudyGroupMember.objects.get_or_create(user=user, group=group)
-    return Response({"message": "Joined successfully"})
+        # Prevent duplicate joins
+        if api_models.StudyGroupMember.objects.filter(group=group, user=user).exists():
+            return Response({"detail": "Already a member"}, status=status.HTTP_400_BAD_REQUEST)
+
+        api_models.StudyGroupMember.objects.create(group=group, user=user)
+        return Response({"detail": "Joined successfully"}, status=status.HTTP_201_CREATED)
+
+    except (api_models.StudyGroup.DoesNotExist, User.DoesNotExist):
+        return Response({"detail": "Group or user not found"}, status=status.HTTP_404_NOT_FOUND)
+
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
 def leave_study_group(request):
     user_id = request.data.get("user_id")
     group_id = request.data.get("group_id")
 
-    api_models.StudyGroupMember.objects.filter(user_id=user_id, group_id=group_id).delete()
-    return Response({"message": "Left the group"})
+    try:
+        group = api_models.StudyGroup.objects.get(id=group_id)
+        user = User.objects.get(id=user_id)
+        membership = api_models.StudyGroupMember.objects.get(group=group, user=user)
+        membership.delete()
+        return Response({"detail": "Left the group"}, status=status.HTTP_200_OK)
+
+    except api_models.StudyGroupMember.DoesNotExist:
+        return Response({"detail": "You are not a member of this group"}, status=status.HTTP_404_NOT_FOUND)
+
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
 def remove_member(request):
     user_id = request.data.get("user_id")
     group_id = request.data.get("group_id")
     requester_id = request.data.get("requester_id")
 
-    group = api_models.StudyGroup.objects.get(id=group_id)
-    if group.created_by_id != int(requester_id):
-        return Response({"error": "Only the creator can remove members"}, status=403)
+    try:
+        group = api_models.StudyGroup.objects.get(id=group_id)
+        requester = User.objects.get(id=requester_id)
+        target = User.objects.get(id=user_id)
 
-    api_models.StudyGroupMember.objects.filter(group=group, user_id=user_id).delete()
-    return Response({"message": "Member removed"})
+        if group.created_by != requester:
+            return Response({"detail": "Only the group creator can remove members"}, status=status.HTTP_403_FORBIDDEN)
+
+        api_models.StudyGroupMember.objects.get(group=group, user=target).delete()
+        return Response({"detail": "Member removed"}, status=status.HTTP_200_OK)
+
+    except (api_models.StudyGroup.DoesNotExist, User.DoesNotExist, api_models.StudyGroupMember.DoesNotExist):
+        return Response({"detail": "Error removing member"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])

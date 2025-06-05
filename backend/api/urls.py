@@ -45,11 +45,12 @@ urlpatterns = [
     path("student/wishlist/<user_id>/", api_views.StudentWishListListCreateAPIView.as_view()),
     path("student/question-answer-list-create/<course_id>/", api_views.QuestionAnswerListCreateAPIView.as_view()),
     path("student/question-answer-message-create/", api_views.QuestionAnswerMessageSendAPIView.as_view()),
-    path("student/study-groups/available/<int:user_id>/", api_views.available_study_groups),
-    path("student/study-groups/join/", api_views.join_study_group),
-    path("student/study-groups/leave/", api_views.leave_study_group),
-    path("student/study-groups/remove-member/", api_views.remove_member),
-    path("student/study-groups/delete/<int:group_id>/", api_views.delete_study_group),
+    
+    path("study-groups/available/<int:user_id>/", api_views.available_study_groups),
+    path("study-groups/join/", api_views.join_study_group),
+    path("study-groups/leave/", api_views.leave_study_group),
+    path("study-groups/remove-member/", api_views.remove_member),
+    path("study-groups/delete/<int:group_id>/", api_views.delete_study_group),
 
 
 

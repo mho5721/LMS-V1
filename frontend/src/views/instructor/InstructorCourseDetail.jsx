@@ -5,15 +5,15 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 
 import BaseHeader from "../partials/BaseHeader";
-
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
+
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import moment from "moment";
 
-function CourseDetail() {
+function InstructorCourseDetail() {
     const [course, setCourse] = useState([]);
     const [variantItem, setVariantItem] = useState(null);
     const [completionPercentage, setCompletionPercentage] = useState(0);
@@ -78,7 +78,7 @@ function CourseDetail() {
 
 
     const fetchCourseDetail = async () => {
-        useAxios.get(`student/course-detail/${UserData()?.user_id}/${param.enrollment_id}/`).then((res) => {
+        useAxios.get(`teacher/course-detail/${param.course_id}/`).then((res) => {
             setCourse(res.data);
             setQuestions(res.data.question_answer);
             setStudentReview(res.data.review);
@@ -91,7 +91,7 @@ function CourseDetail() {
 
 
     const fetchCourseMaterials = async () => {
-    const courseId = course.course?.course_id;
+    const courseId = course?.course_id || course.course?.course_id;
     if (!courseId) return;
 
     try {
@@ -107,6 +107,7 @@ function CourseDetail() {
 
     useEffect(() => {
         fetchCourseDetail();
+        console.log(param.course_id);
     }, []);
     useEffect(() => {
         if (course.course?.id) {
@@ -252,50 +253,6 @@ function CourseDetail() {
         }
     };
 
-    const handleReviewChange = (event) => {
-        setCreateReview({
-            ...createReview,
-            [event.target.name]: event.target.value,
-        });
-    };
-
-    const handleCreateReviewSubmit = (e) => {
-        e.preventDefault();
-
-        const formdata = new FormData();
-        formdata.append("course_id", course.course?.id);
-        formdata.append("user_id", UserData()?.user_id);
-        formdata.append("rating", createReview?.rating);
-        formdata.append("review", createReview?.review);
-
-        useAxios.post(`student/rate-course/`, formdata).then((res) => {
-            console.log(res.data);
-            fetchCourseDetail();
-            Toast().fire({
-                icon: "success",
-                title: "Review created",
-            });
-        });
-    };
-
-    const handleUpdateReviewSubmit = (e) => {
-        e.preventDefault();
-
-        const formdata = new FormData();
-        formdata.append("course", course.course?.id);
-        formdata.append("user", UserData()?.user_id);
-        formdata.append("rating", createReview?.rating || studentReview?.rating);
-        formdata.append("review", createReview?.review || studentReview?.review);
-
-        useAxios.patch(`student/review-detail/${UserData()?.user_id}/${studentReview?.id}/`, formdata).then((res) => {
-            console.log(res.data);
-            fetchCourseDetail();
-            Toast().fire({
-                icon: "success",
-                title: "Review updated",
-            });
-        });
-    };
 
 
     return (
@@ -735,4 +692,4 @@ function CourseDetail() {
     );
 }
 
-export default CourseDetail;
+export default InstructorCourseDetail;
