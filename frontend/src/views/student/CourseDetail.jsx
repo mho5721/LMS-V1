@@ -81,9 +81,6 @@ function CourseDetail() {
         useAxios.get(`student/course-detail/${UserData()?.user_id}/${param.enrollment_id}/`).then((res) => {
             setCourse(res.data);
             setQuestions(res.data.question_answer);
-            setStudentReview(res.data.review);
-            const percentageCompleted = (res.data.completed_lesson?.length / res.data.lectures?.length) * 100;
-            setCompletionPercentage(percentageCompleted?.toFixed(0));
         });
     };
 
@@ -114,28 +111,6 @@ function CourseDetail() {
             fetchCourseMaterials();  
         }
       }, [course]);
-
-    // console.log(studentReview);
-    const handleMarkLessonAsCompleted = (variantItemId) => {
-        const key = `lecture_${variantItemId}`;
-        setMarkAsCompletedStatus({
-            ...markAsCompletedStatus,
-            [key]: "Updating",
-        });
-
-        const formdata = new FormData();
-        formdata.append("user_id", UserData()?.user_id || 0);
-        formdata.append("course_id", course.course?.id);
-        formdata.append("variant_item_id", variantItemId);
-
-        useAxios.post(`student/course-completed/`, formdata).then((res) => {
-            fetchCourseDetail();
-            setMarkAsCompletedStatus({
-                ...markAsCompletedStatus,
-                [key]: "Updated",
-            });
-        });
-    };
 
     const handleNoteChange = (event) => {
         setCreateNote({

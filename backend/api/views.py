@@ -1055,3 +1055,55 @@ def delete_study_group(request, group_id):
 
     group.delete()
     return Response({"message": "Study group deleted"})
+
+class InstructorCourseFullDetailAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, user_id, course_id):
+        user = User.objects.get(id=user_id)
+        course = api_models.Course.objects.get(course_id=course_id)
+
+        completed_lessons = api_models.CompletedLesson.objects.filter(user=user, course=course)
+        notes = api_models.Note.objects.filter(user=user, course=course)
+        review = api_models.Review.objects.filter(user=user, course=course).first()
+        questions = api_models.Question_Answer.objects.filter(course=course)
+
+        course_data = api_serializer.CourseSerializer(course, context={"request": request}).data
+        return Response({
+            "course": course_data,
+            "completed_lesson": api_serializer.CompletedLessonSerializer(completed_lessons, many=True).data,
+            "note": api_serializer.NoteSerializer(notes, many=True).data,
+            "review": api_serializer.ReviewSerializer(review).data if review else None,
+            "question_answer": api_serializer.Question_AnswerSerializer(questions, many=True).data
+        })
+
+class InstructorNoteCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = api_serializer.NoteSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        user_id = self.request.query_params.get("user_id")
+        course_id = self.request.query_params.get("course_id")
+        return api_models.Note.objects.filter(user__id=user_id, course__course_id=course_id)
+
+    def create(self, request, *args, **kwargs):
+        user = User.objects.get(id=request.data["user_id"])
+        course = api_models.Course.objects.get(id=request.data["course_id"])
+        note = api_models.Note.objects.create(
+            user=user,
+            course=course,
+            title=request.data["title"],
+            note=request.data["note"]
+        )
+        return Response({"message": "Note created", "id": note.id}, status=status.HTTP_201_CREATED)
+
+class InstructorNoteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = api_serializer.NoteSerializer
+    permission_classes = [AllowAny]
+
+    def get_object(self):
+        user_id = self.kwargs["user_id"]
+        course_id = self.kwargs["course_id"]  # This is numeric
+        note_id = self.kwargs["note_id"]
+        return api_models.Note.objects.get(user__id=user_id, course__id=course_id, id=note_id)
+

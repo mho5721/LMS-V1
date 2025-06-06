@@ -78,7 +78,7 @@ function InstructorCourseDetail() {
 
 
     const fetchCourseDetail = async () => {
-        useAxios.get(`teacher/course-detail/${param.course_id}/`).then((res) => {
+        useAxios.get(`teacher/course-full-detail/${UserData()?.user_id}/${param.course_id}/`).then((res) => {
             setCourse(res.data);
             setQuestions(res.data.question_answer);
             setStudentReview(res.data.review);
@@ -148,14 +148,14 @@ function InstructorCourseDetail() {
     const handleSubmitCreateNote = async (e) => {
         e.preventDefault();
         const formdata = new FormData();
-
+    
         formdata.append("user_id", UserData()?.user_id);
-        formdata.append("enrollment_id", param.enrollment_id);
+        formdata.append("course_id", course.course?.id);
         formdata.append("title", createNote.title);
         formdata.append("note", createNote.note);
-
+    
         try {
-            await useAxios.post(`student/course-note/${UserData()?.user_id}/${param.enrollment_id}/`, formdata).then((res) => {
+            await useAxios.post(`teacher/course-note/`, formdata).then((res) => {
                 fetchCourseDetail();
                 handleNoteClose();
                 Toast().fire({
@@ -164,20 +164,21 @@ function InstructorCourseDetail() {
                 });
             });
         } catch (error) {
-            console.log(error);
+            console.error("Note creation error:", error);
         }
     };
+    
 
     const handleSubmitEditNote = (e, noteId) => {
         e.preventDefault();
         const formdata = new FormData();
 
         formdata.append("user_id", UserData()?.user_id);
-        formdata.append("enrollment_id", param.enrollment_id);
+        formdata.append("course_id", course.course?.id);      
         formdata.append("title", createNote.title || selectedNote?.title);
         formdata.append("note", createNote.note || selectedNote?.note);
 
-        useAxios.patch(`student/course-note-detail/${UserData()?.user_id}/${param.enrollment_id}/${noteId}/`, formdata).then((res) => {
+        useAxios.patch(`teacher/course-note-detail/${UserData()?.user_id}/${course.course?.id}/${noteId}/`, formdata).then((res) => {
             fetchCourseDetail();
             Toast().fire({
                 icon: "success",
@@ -187,7 +188,7 @@ function InstructorCourseDetail() {
     };
 
     const handleDeleteNote = (noteId) => {
-        useAxios.delete(`student/course-note-detail/${UserData()?.user_id}/${param.enrollment_id}/${noteId}/`).then((res) => {
+        useAxios.delete(`teacher/course-note-detail/${UserData()?.user_id}/${course.course?.id}/${noteId}/`).then((res) => {
             fetchCourseDetail();
             Toast().fire({
                 icon: "success",
