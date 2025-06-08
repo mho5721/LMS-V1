@@ -277,28 +277,6 @@ class StudentNoteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         note = api_models.Note.objects.get(user=user, course=enrolled.course, id=note_id)
         return note
 
-class StudentRateCourseCreateAPIView(generics.CreateAPIView):
-    serializer_class = api_serializer.ReviewSerializer
-    permission_classes = [AllowAny]
-
-    def create(self, request, *args, **kwargs):
-        user_id = request.data['user_id']
-        course_id = request.data['course_id']
-        rating = request.data['rating']
-        review = request.data['review']
-
-        user = User.objects.get(id=user_id)
-        course = api_models.Course.objects.get(id=course_id)
-
-        api_models.Review.objects.create(
-            user=user,
-            course=course,
-            review=review,
-            rating=rating,
-            active=True,
-        )
-
-        return Response({"message": "Review created successfullly"}, status=status.HTTP_201_CREATED)
 
 class StudentRateCourseUpdateAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = api_serializer.ReviewSerializer
@@ -487,25 +465,6 @@ class TeacherStudentsListAPIVIew(viewsets.ViewSet):
         return Response(students)
 
 
-class TeacherBestSellingCourseAPIView(viewsets.ViewSet):
-
-    def list(self, request, teacher_id=None):
-        teacher = api_models.Teacher.objects.get(id=teacher_id)
-        courses_with_total_price = []
-        courses = api_models.Course.objects.filter(teacher=teacher)
-
-        for course in courses:
-            revenue = course.enrolledcourse_set.aggregate(total_price=models.Sum('order_item__price'))['total_price'] or 0
-            sales = course.enrolledcourse_set.count()
-
-            courses_with_total_price.append({
-                'course_image': course.image.url,
-                'course_title': course.title,
-                'revenue': revenue,
-                'sales': sales,
-            })
-
-        return Response(courses_with_total_price)
     
 
 class TeacherQuestionAnswerListAPIView(generics.ListAPIView):
@@ -574,64 +533,6 @@ class CourseCreateAPIView(APIView):
             "course_id": course.course_id
         }, status=status.HTTP_201_CREATED)
 
-
-
-
-
-
-# class CourseCreateAPIView(generics.CreateAPIView):
-#     querysect = api_models.Course.objects.all()
-#     serializer_class = api_serializer.CourseSerializer
-#     permisscion_classes = [AllowAny]
-
-#     def perform_create(self, serializer):
-#         serializer.is_valid(raise_exception=True)
-#         course_instance = serializer.save()
-
-#         variant_data = []
-#         for key, value in self.request.data.items():
-#             if key.startswith('variant') and '[variant_title]' in key:
-#                 index = key.split('[')[1].split(']')[0]
-#                 title = value
-
-#                 variant_dict = {'title': title}
-#                 item_data_list = []
-#                 current_item = {}
-#                 variant_data = []
-
-#                 for item_key, item_value in self.request.data.items():
-#                     if f'variants[{index}][items]' in item_key:
-#                         field_name = item_key.split('[')[-1].split(']')[0]
-#                         if field_name == "title":
-#                             if current_item:
-#                                 item_data_list.append(current_item)
-#                             current_item = {}
-#                         current_item.update({field_name: item_value})
-                    
-#                 if current_item:
-#                     item_data_list.append(current_item)
-
-#                 variant_data.append({'variant_data': variant_dict, 'variant_item_data': item_data_list})
-
-#         for data_entry in variant_data:
-#             variant = api_models.Variant.objects.create(title=data_entry['variant_data']['title'], course=course_instance)
-
-#             for item_data in data_entry['variant_item_data']:
-#                 preview_value = item_data.get("preview")
-#                 preview = bool(strtobool(str(preview_value))) if preview_value is not None else False
-
-#                 api_models.VariantItem.objects.create(
-#                     variant=variant,
-#                     title=item_data.get("title"),
-#                     description=item_data.get("description"),
-#                     file=item_data.get("file"),
-#                     preview=preview,
-#                 )
-
-#     def save_nested_data(self, course_instance, serializer_class, data):
-#         serializer = serializer_class(data=data, many=True, context={"course_instance": course_instance})
-#         serializer.is_valid(raise_exception=True)
-#         serializer.save(course=course_instance) 
 
 class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
     querysect = api_models.Course.objects.all()
@@ -911,7 +812,7 @@ class StudyGroupViewSet(viewsets.ModelViewSet):
 
 
 class GroupMessageViewSet(viewsets.ModelViewSet):
-    queryset = api_models.GroupMessage.objects.all()  # ✅ Required for DRF router
+    queryset = api_models.GroupMessage.objects.all()  #  Required for DRF router
     serializer_class = api_serializer.GroupMessageSerializer
     permission_classes = [IsAuthenticated]
 
@@ -1106,4 +1007,44 @@ class InstructorNoteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         course_id = self.kwargs["course_id"]  # This is numeric
         note_id = self.kwargs["note_id"]
         return api_models.Note.objects.get(user__id=user_id, course__id=course_id, id=note_id)
+
+
+class StudentCourseAssignmentAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.AssignmentSerializer
+
+    def get_queryset(self):
+        course_id = self.kwargs.get("course_id")
+        return api_models.Assignment.objects.filter(course__id=course_id)
+
+class AssignmentSubmissionCreateAPIView(generics.CreateAPIView):
+    serializer_class = api_serializer.AssignmentSubmissionSerializer
+    permission_classes = [AllowAny]
+
+class StudentAssignmentSubmissionsAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.AssignmentSubmissionSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs.get("user_id")
+        return api_models.AssignmentSubmission.objects.filter(student__id=user_id)
+    
+    def create(self, request, *args, **kwargs):
+        print("== DEBUG DATA ==")
+        print("request.data:", request.data)
+        print("request.FILES:", request.FILES)
+        return super().create(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        student_id = request.data.get("student")
+        assignment_id = request.data.get("assignment")
+
+        try:
+            submission = api_models.AssignmentSubmission.objects.get(student_id=student_id, assignment_id=assignment_id)
+            serializer = self.get_serializer(submission, data=request.data, partial=True)
+        except api_models.AssignmentSubmission.DoesNotExist:
+            serializer = self.get_serializer(data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 

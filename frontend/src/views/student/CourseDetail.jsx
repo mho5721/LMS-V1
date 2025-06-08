@@ -13,11 +13,11 @@ import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import moment from "moment";
 
+import CollaborativeEditor from "./CollaborativeEditor";
+
 function CourseDetail() {
     const [course, setCourse] = useState([]);
     const [variantItem, setVariantItem] = useState(null);
-    const [completionPercentage, setCompletionPercentage] = useState(0);
-    const [markAsCompletedStatus, setMarkAsCompletedStatus] = useState({});
     const [createNote, setCreateNote] = useState({ title: "", note: "" });
     const [selectedNote, setSelectedNote] = useState(null);
     const [createMessage, setCreateMessage] = useState({
@@ -101,6 +101,55 @@ function CourseDetail() {
     }
     };
 
+    const [assignments, setAssignments] = useState([]);
+
+    const fetchAssignments = async () => {
+        try {
+          const response = await useAxios.get(`student/course-assignments/${course.course?.id}/`);
+          setAssignments(response.data);
+        } catch (err) {
+          console.error("Error fetching assignments:", err);
+        }
+    };
+    
+    const [selectedFile, setSelectedFile] = useState({});
+    const [submittingAssignmentId, setSubmittingAssignmentId] = useState(null);
+
+    const handleFileChange = (assignmentId, file) => {
+    setSelectedFile((prev) => ({ ...prev, [assignmentId]: file }));
+    };
+
+    const handleSubmitAssignment = async (assignmentId) => {
+    if (!selectedFile[assignmentId]) return;
+
+    const formData = new FormData();
+    formData.append("assignment", assignmentId);
+    formData.append("student", UserData()?.user_id);
+    formData.append("file", selectedFile[assignmentId]);
+
+    try {
+        await useAxios.post("/student/submit-assignment/", formData,{
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
+        alert("Submission successful.");
+    } catch (err) {
+        console.error("Submission failed", err);
+        alert("Submission failed.");
+    }
+    };
+    const [submissions, setSubmissions] = useState([]);
+    const fetchSubmissions = async () => {
+        try {
+          const res = await useAxios.get(`/student/assignment-submissions/${UserData()?.user_id}/`);
+          setSubmissions(res.data);
+        } catch (err) {
+          console.error("Error fetching submissions:", err);
+        }
+      };
+      
+
 
     useEffect(() => {
         fetchCourseDetail();
@@ -108,7 +157,9 @@ function CourseDetail() {
     useEffect(() => {
         if (course.course?.id) {
             fetchAvailableGroups();
-            fetchCourseMaterials();  
+            fetchCourseMaterials();
+            fetchAssignments();
+            fetchSubmissions();
         }
       }, [course]);
 
@@ -234,43 +285,7 @@ function CourseDetail() {
         });
     };
 
-    const handleCreateReviewSubmit = (e) => {
-        e.preventDefault();
 
-        const formdata = new FormData();
-        formdata.append("course_id", course.course?.id);
-        formdata.append("user_id", UserData()?.user_id);
-        formdata.append("rating", createReview?.rating);
-        formdata.append("review", createReview?.review);
-
-        useAxios.post(`student/rate-course/`, formdata).then((res) => {
-            console.log(res.data);
-            fetchCourseDetail();
-            Toast().fire({
-                icon: "success",
-                title: "Review created",
-            });
-        });
-    };
-
-    const handleUpdateReviewSubmit = (e) => {
-        e.preventDefault();
-
-        const formdata = new FormData();
-        formdata.append("course", course.course?.id);
-        formdata.append("user", UserData()?.user_id);
-        formdata.append("rating", createReview?.rating || studentReview?.rating);
-        formdata.append("review", createReview?.review || studentReview?.review);
-
-        useAxios.patch(`student/review-detail/${UserData()?.user_id}/${studentReview?.id}/`, formdata).then((res) => {
-            console.log(res.data);
-            fetchCourseDetail();
-            Toast().fire({
-                icon: "success",
-                title: "Review updated",
-            });
-        });
-    };
 
 
     return (
@@ -323,6 +338,12 @@ function CourseDetail() {
                                                                 Study Groups
                                                             </button>
                                                         </li>
+                                                        <li className="nav-item me-2 me-sm-4" role="presentation">
+                                                                <button className="nav-link mb-2 mb-md-0" id="course-pills-tab-5" data-bs-toggle="pill" data-bs-target="#course-pills-5" type="button" role="tab" aria-controls="course-pills-5" aria-selected="false">
+                                                                    Assignments
+                                                                </button>
+                                                                </li>
+
                                                     </ul>
                                                 </div>
                                                 {/* Tabs END */}
@@ -553,6 +574,88 @@ function CourseDetail() {
                                                                 </div>
                                                             </div>
                                                             </div>
+                                                            <div className="tab-pane fade" id="course-pills-5" role="tabpanel" aria-labelledby="course-pills-tab-5">
+                                                                <div className="card">
+                                                                    <div className="card-header border-bottom p-3">
+                                                                    <h4 className="mb-0">Course Assignments</h4>
+                                                                    </div>
+                                                                    <div className="card-body">
+                                                                    {assignments.length > 0 ? (
+                                                                        assignments.map((assignment) => {
+                                                                            const submission = submissions
+                                                                            .filter((sub) => sub.assignment === assignment.id)
+                                                                            .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0];
+                                                                          
+                                                                        return (
+                                                                            <div key={assignment.id} className="border rounded p-3 mb-3">
+                                                                            <h5>{assignment.title}</h5>
+                                                                            <p>{assignment.description}</p>
+                                                                            <p><strong>Due:</strong> {new Date(assignment.due_date).toLocaleString()}</p>
+                                                                            {assignment.file && (
+                                                                                <a
+                                                                                href={assignment.file}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="btn btn-sm btn-outline-primary me-2"
+                                                                                >
+                                                                                Download
+                                                                                    </a>
+                                                                                    
+                                                                                )}
+                                                                                {assignments.map((assignment) =>
+                                                                                assignment.id ? (
+                                                                                    <div key={assignment.id}>
+                                                                                    <h3>{assignment.title}</h3>
+                                                                                    <CollaborativeEditor docId={`assignment-${assignment.id}`} />
+                                                                                    </div>
+                                                                                ) : null
+                                                                                )}
+
+
+
+                                                                            {submission && (
+                                                                                <div className="alert alert-info mt-3">
+                                                                                <strong>Submitted:</strong> {new Date(submission.submitted_at).toLocaleString()}
+                                                                                <br />
+                                                                                <a
+                                                                                    href={submission.file}
+                                                                                    target="_blank"
+                                                                                    rel="noopener noreferrer"
+                                                                                    className="btn btn-sm btn-outline-success mt-2"
+                                                                                >
+                                                                                    View Submission
+                                                                                </a>
+                                                                                {submission.is_graded ? (
+                                                                                    <p className="mt-2 text-success"><strong>Grade:</strong> {submission.grade}</p>
+                                                                                ) : (
+                                                                                    <p className="mt-2 text-warning"><strong>Not graded yet</strong></p>
+                                                                                )}
+                                                                                </div>
+                                                                            )}
+
+                                                                            <div className="mt-3">
+                                                                                <input
+                                                                                type="file"
+                                                                                onChange={(e) => handleFileChange(assignment.id, e.target.files[0])}
+                                                                                />
+                                                                                <button
+                                                                                className="btn btn-success btn-sm mt-2"
+                                                                                onClick={() => handleSubmitAssignment(assignment.id)}
+                                                                                >
+                                                                                {submission ? "Resubmit" : "Submit Assignment"}
+                                                                                </button>
+                                                                            </div>
+                                                                            </div>
+                                                                        );
+                                                                        })
+                                                                    ) : (
+                                                                        <p>No assignments yet.</p>
+                                                                    )}
+                                                                    </div>
+                                                                </div>
+                                                                </div>
+
+
 
                                                     </div>
                                                 </div>

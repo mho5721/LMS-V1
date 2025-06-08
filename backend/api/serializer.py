@@ -57,9 +57,13 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
     is_instructor = serializers.BooleanField(source="user.is_instructor", read_only=True)
+    full_name = serializers.CharField(source="user.full_name", read_only=True)
+    username = serializers.CharField(source="user.username", read_only=True)
+
     class Meta:
         model = Profile
         fields = "__all__"
+
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -304,3 +308,13 @@ class StudyGroupMemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = api_models.StudyGroupMember
         fields = '__all__'
+
+class AssignmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = api_models.Assignment
+        fields = '__all__'
+
+class AssignmentSubmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = api_models.AssignmentSubmission
+        fields = "__all__"
