@@ -8,6 +8,7 @@ router = DefaultRouter()
 router.register(r'study-groups', api_views.StudyGroupViewSet)
 router.register(r'study-group-members', api_views.StudyGroupMemberViewSet)
 router.register(r'study-group-messages', api_views.GroupMessageViewSet)
+router.register(r'study-group-resources', api_views.SharedResourceViewSet)
 
 urlpatterns = [
     # Authentication Endpoints
@@ -91,6 +92,7 @@ urlpatterns = [
 ]
 
 urlpatterns += router.urls
+
 
 
 

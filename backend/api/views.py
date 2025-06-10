@@ -1233,3 +1233,15 @@ class AggregatedCourseContentAPIView(APIView):
 
         combined = "\n\n".join(list(course_descriptions) + list(notes) + list(material_titles))
         return Response({"content": combined})
+    
+class SharedResourceViewSet(viewsets.ModelViewSet):
+    queryset = api_models.SharedResource.objects.all()
+    serializer_class = api_serializer.SharedResourceSerializer
+    parser_classes = (MultiPartParser, FormParser) 
+
+    def get_queryset(self):
+        group_id = self.request.query_params.get("group")
+        return api_models.SharedResource.objects.filter(group_id=group_id)
+
+    def perform_create(self, serializer):
+        serializer.save(uploaded_by=self.request.user)

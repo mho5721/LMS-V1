@@ -78,8 +78,6 @@ function Courses() {
                                                 <tr>
                                                     <th>Courses</th>
                                                     <th>Date Enrolled</th>
-                                                    <th>Lectures</th>
-                                                    <th>Completed</th>
                                                     <th>Action</th>
                                                     <th />
                                                 </tr>
@@ -115,12 +113,6 @@ function Courses() {
                                                         </td>
                                                         <td>
                                                             <p className="mt-3">{moment(c.date).format("D MMM, YYYY")}</p>
-                                                        </td>
-                                                        <td>
-                                                            <p className="mt-3">{c.lectures?.length}</p>
-                                                        </td>
-                                                        <td>
-                                                            <p className="mt-3">{c.completed_lesson?.length}</p>
                                                         </td>
                                                         <td>
                                                             {c.completed_lesson?.length < 1 && (

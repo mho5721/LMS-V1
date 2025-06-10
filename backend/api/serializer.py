@@ -332,3 +332,9 @@ class DropoutRiskInputSerializer(serializers.Serializer):
     days_enrolled = serializers.IntegerField()
     
 
+class SharedResourceSerializer(serializers.ModelSerializer):
+    uploaded_by_name = serializers.CharField(source="uploaded_by.full_name", read_only=True)
+
+    class Meta:
+        model = api_models.SharedResource
+        fields = '__all__'

@@ -20,6 +20,9 @@ function StudyGroupDetail() {
     const [replyToText, setReplyToText] = useState("");
     const [members, setMembers] = useState([]);
     const messagesEndRef = useRef(null);
+    const [resources, setResources] = useState([]);
+    const [title, setTitle] = useState("");
+    const [file, setFile] = useState(null);
 
     const isCreator = group?.created_by === UserData()?.user_id;
 
@@ -37,6 +40,16 @@ function StudyGroupDetail() {
         const res = await useAxios.get(`/study-group-members/?group=${id}`);
         setMembers(res.data);
     };
+
+    const fetchResources = async () => {
+        try {
+          const res = await useAxios.get(`/study-group-resources/?group=${id}`);
+          setResources(res.data);
+        } catch (err) {
+          console.error("Failed to fetch resources:", err);
+        }
+      };
+      
 
     const checkMembership = async () => {
         const res = await useAxios.get(`/study-group-members/?group=${id}`);
@@ -115,11 +128,38 @@ function StudyGroupDetail() {
         });
     };
 
+    const handleUploadResource = async (e) => {
+        e.preventDefault();
+        if (!file || !title) return;
+      
+        const formData = new FormData();
+        formData.append("group", id);
+        formData.append("title", title);
+        formData.append("file", file);
+      
+        try {
+            await useAxios.post(`/study-group-resources/`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+          Toast().fire({ icon: "success", title: "Resource uploaded" });
+          setTitle("");
+          setFile(null);
+          fetchResources();
+        } catch (err) {
+          Toast().fire({ icon: "error", title: "Upload failed" });
+          console.error(err);
+        }
+      };
+      
+
     useEffect(() => {
         fetchGroup();
         fetchMessages();
         fetchMembers();
         checkMembership();
+        fetchResources();
     }, [id]);
 
     useEffect(() => {
@@ -171,6 +211,38 @@ function StudyGroupDetail() {
                                     </div>
                                 </div>
                             )}
+
+                                <div className="card mb-4">
+                                <div className="card-header">Shared Resources</div>
+                                <div className="card-body">
+                                    <ul className="list-group mb-3">
+                                    {resources.map((r) => (
+                                        <li key={r.id} className="list-group-item d-flex justify-content-between align-items-center">
+                                        <a href={r.file} target="_blank" rel="noopener noreferrer">{r.title}</a>
+                                        <span className="text-muted small">by {r.uploaded_by_name}</span>
+                                        </li>
+                                    ))}
+                                    </ul>
+
+                                    <form onSubmit={handleUploadResource}>
+                                    <input
+                                        type="text"
+                                        className="form-control mb-2"
+                                        placeholder="Resource title"
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        required
+                                    />
+                                    <input
+                                        type="file"
+                                        className="form-control mb-2"
+                                        onChange={(e) => setFile(e.target.files[0])}
+                                        required
+                                    />
+                                    <button type="submit" className="btn btn-primary">Upload Resource</button>
+                                    </form>
+                                </div>
+                                </div>
 
                             <div className="card">
                                 <div className="card-body" style={{ height: "500px", overflowY: "auto" }}>
