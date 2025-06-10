@@ -54,9 +54,10 @@ urlpatterns = [
     path("student/course-assignments/<int:course_id>/", api_views.StudentCourseAssignmentAPIView.as_view()),
     path("student/submit-assignment/", api_views.AssignmentSubmissionCreateAPIView.as_view()),
     path("student/assignment-submissions/<int:user_id>/", api_views.StudentAssignmentSubmissionsAPIView.as_view()),
-
-
-
+    
+    path("student/dropout-risk/", api_views.DropoutRiskAPIView.as_view()),
+    path("student/activity-history/<int:student_id>/", api_views.StudentActivityHistoryAPIView.as_view()),
+    path("student/aggregated-course-content/", api_views.AggregatedCourseContentAPIView.as_view()),
 
 
 
@@ -78,6 +79,11 @@ urlpatterns = [
     path("teacher/course-full-detail/<user_id>/<course_id>/", api_views.InstructorCourseFullDetailAPIView.as_view()),
     path("teacher/course-note/", api_views.InstructorNoteCreateAPIView.as_view()),
     path("teacher/course-note-detail/<user_id>/<course_id>/<note_id>/", api_views.InstructorNoteDetailAPIView.as_view()),
+    path("teacher/assignments/<course_id>/", api_views.InstructorAssignmentListCreateAPIView.as_view()),
+    path("teacher/assignment-submissions/<assignment_id>/", api_views.InstructorAssignmentSubmissionsAPIView.as_view()),
+    path("teacher/grade-submission/<int:id>/", api_views.GradeAssignmentAPIView.as_view()),
+    path("teacher/analytics/<teacher_id>/", api_views.TeacherAnalyticsAPIView.as_view()),
+
 
 
     path("file-upload/", api_views.FileUploadAPIView.as_view())

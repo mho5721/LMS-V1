@@ -1,6 +1,7 @@
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import { useState, useRef, useEffect } from "react";
+import useAxios from "../../utils/useAxios";
 
 // Inject loader CSS
 if (typeof document !== "undefined") {
@@ -35,6 +36,15 @@ function FloatingChatbot() {
 
   const textareaRef = useRef(null);
   const bottomRef = useRef(null);
+
+  const [courseContent, setCourseContent] = useState("");
+
+  useEffect(() => {
+    useAxios.get("student/aggregated-course-content/").then((res) => {
+      setCourseContent(res.data.content);
+    });
+  }, []);
+
 
   useEffect(() => {
     if (!isLoading && isOpen && textareaRef.current) {

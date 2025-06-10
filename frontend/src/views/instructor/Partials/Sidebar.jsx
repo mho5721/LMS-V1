@@ -49,12 +49,6 @@ function Sidebar() {
                   <i className="fas fa-graduation-cap me-2"></i>Students
                 </Link>
               </li>
-              <li className="nav-item">
-                <Link className="nav-link" to={`/instructor/question-answer/`}>
-                  {" "}
-                  <i className="fas fa-envelope me-2"></i> Q/A{" "}
-                </Link>
-              </li>
             </ul>
 
             {/* Navbar header */}

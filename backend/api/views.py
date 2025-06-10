@@ -6,7 +6,7 @@ from django.contrib.auth.hashers import check_password
 from django.db import models
 from django.db.models.functions import ExtractMonth
 from django.core.files.uploadedfile import InMemoryUploadedFile
-
+from django.utils.timezone import now, timedelta
 
 
 
@@ -28,6 +28,7 @@ from decimal import Decimal
 import requests
 from datetime import datetime, timedelta
 from distutils.util import strtobool
+import jwt
 
 
 # Updates
@@ -40,12 +41,26 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+from django.db.models import Max
 
+import joblib
+import numpy as np
 
-
+from django.contrib.auth.models import update_last_login
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = api_serializer.MyTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.user
+
+        update_last_login(None, user)
+
+        # Return token response
+        return Response(serializer.validated_data, status=200)
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -178,14 +193,15 @@ class StudentSummaryAPIView(generics.ListAPIView):
         user_id = self.kwargs['user_id']
         user = User.objects.get(id=user_id)
 
-        total_courses = api_models.EnrolledCourse.objects.filter(user=user).count()
-        completed_lessons = api_models.CompletedLesson.objects.filter(user=user).count()
-        achieved_certificates = api_models.Certificate.objects.filter(user=user).count()
+        active_courses = api_models.EnrolledCourse.objects.filter(user=user).count()
+        notes_created = api_models.Note.objects.filter(user=user).count()
+        assignments_submitted = api_models.AssignmentSubmission.objects.filter(student=user).count()
+
 
         return [{
-            "total_courses": total_courses,
-            "completed_lessons": completed_lessons,
-            "achieved_certificates": achieved_certificates,
+            "active_courses": active_courses,
+            "notes_created": notes_created,
+            "assignments_submitted": assignments_submitted,
         }]
     
     def list(self, request, *args, **kwargs):
@@ -385,13 +401,23 @@ class TeacherSummaryAPIView(generics.ListAPIView):
         
         enrolled_courses = api_models.EnrolledCourse.objects.filter(teacher=teacher)
         unique_student_ids = set()
+        
+        # Count at-risk predictions for this teacher's students in last 24h
+        recent = now() - timedelta(days=1)
+        at_risk_count = api_models.DropoutPrediction.objects.filter(
+            user_id__in=unique_student_ids,
+            score__gt=0.7,
+            predicted_at__gte=recent
+        ).values("user_id").distinct().count()
+
+        
         students = []
 
         for course in enrolled_courses:
             if course.user_id not in unique_student_ids:
                 user = User.objects.get(id=course.user_id)
                 student = {
-                    "full_name": user.profile.full_name,
+                    "full_name": user.full_name,
                     "image": user.profile.image.url,
                     "country": user.profile.country,
                     "date": course.date
@@ -402,9 +428,8 @@ class TeacherSummaryAPIView(generics.ListAPIView):
 
         return [{
             "total_courses": total_courses,
-            "total_revenue": total_revenue,
-            "monthly_revenue": monthly_revenue,
             "total_students": len(students),
+            "at_risk_students": at_risk_count,
         }]
     
     def list(self, request, *args, **kwargs):
@@ -453,7 +478,7 @@ class TeacherStudentsListAPIVIew(viewsets.ViewSet):
             if course.user_id not in unique_student_ids:
                 user = User.objects.get(id=course.user_id)
                 student = {
-                    "full_name": user.profile.full_name,
+                    "full_name": user.full_name,
                     "image": user.profile.image.url,
                     "country": user.profile.country,
                     "date": course.date
@@ -1047,4 +1072,164 @@ class StudentAssignmentSubmissionsAPIView(generics.ListAPIView):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class InstructorAssignmentListCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = api_serializer.AssignmentSerializer
 
+    def get_queryset(self):
+        course_id = self.kwargs["course_id"]
+        return api_models.Assignment.objects.filter(course__course_id=course_id)
+
+    def perform_create(self, serializer):
+        course_id = self.request.data.get("course")
+        course = api_models.Course.objects.get(id=course_id)
+        serializer.save(course=course)
+        print("Creating assignment for course:", self.request.data.get("course"))
+
+# View & Grade submissions
+class InstructorAssignmentSubmissionsAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.AssignmentSubmissionSerializer
+
+    def get_queryset(self):
+        assignment_id = self.kwargs["assignment_id"]
+
+        # Get latest submission id per student
+        latest_ids = (
+            api_models.AssignmentSubmission.objects
+            .filter(assignment_id=assignment_id)
+            .values("student_id")
+            .annotate(latest_id=Max("id"))
+            .values_list("latest_id", flat=True)
+        )
+
+        return api_models.AssignmentSubmission.objects.filter(id__in=latest_ids)
+    
+# Grade a specific submission
+class GradeAssignmentAPIView(generics.UpdateAPIView):
+    serializer_class = api_serializer.AssignmentSubmissionSerializer
+    queryset = api_models.AssignmentSubmission.objects.all()
+    lookup_field = "id"
+
+
+model = joblib.load("api/ml_models/dropout_model.pkl")
+
+
+class DropoutRiskAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = api_serializer.DropoutRiskInputSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        data = serializer.validated_data
+
+        try:
+            features = np.array([
+                data["days_since_last_login"],
+                data["assignments_submitted"],
+                data["discussions_participated"],
+                data["note_count"],
+                data["days_enrolled"]
+            ]).reshape(1, -1)
+
+            risk = model.predict_proba(features)[0][1]
+            return Response({"dropout_risk_score": round(risk, 2)})
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+class TeacherAnalyticsAPIView(APIView):
+    def get(self, request, teacher_id):
+        try:
+            teacher = api_models.Teacher.objects.get(id=teacher_id)
+            courses = api_models.Course.objects.filter(teacher=teacher)
+            students = api_models.EnrolledCourse.objects.filter(course__in=courses).values_list("user_id", flat=True).distinct()
+
+            total_courses = courses.count()
+            total_students = len(students)
+
+            at_risk = api_models.DropoutPrediction.objects.filter(
+                user_id__in=students,
+                score__gt=0.7,
+                predicted_at__gte=now() - timedelta(days=1)
+            ).values("user_id").distinct().count()
+
+            total_notes = api_models.Note.objects.filter(user_id__in=students).count()
+            discussion_messages = api_models.Question_Answer_Message.objects.filter(user_id__in=students).count()
+
+            daily_data = []
+            for i in range(7):
+                day = now() - timedelta(days=i)
+                day_str = day.strftime("%Y-%m-%d")
+                enrolls = api_models.EnrolledCourse.objects.filter(course__in=courses, date__date=day.date()).count()
+                subs = api_models.AssignmentSubmission.objects.filter(student_id__in=students, submitted_at__date=day.date()).count()
+
+                msgs = api_models.Question_Answer_Message.objects.filter(user_id__in=students, date__date=day.date()).count()
+
+
+                daily_data.append({
+                    "date": day_str,
+                    "enrollments": enrolls,
+                    "submissions": subs,
+                    "messages": msgs,
+                })
+
+            top_students = []
+            for uid in students[:10]:
+                try:
+                    user = User.objects.get(id=uid)
+                    top_students.append({
+                        "name": user.full_name or user.username,
+                        "notes": api_models.Note.objects.filter(user=user).count(),
+                        "assignments": api_models.AssignmentSubmission.objects.filter(student=user).count(),
+                        "messages": api_models.Question_Answer_Message.objects.filter(user=user).count(),
+                    })
+                except Exception as e:
+                    print(f"Error with user {uid}: {e}")
+
+            return Response({
+                "total_courses": total_courses,
+                "total_students": total_students,
+                "at_risk_students": at_risk,
+                "total_notes": total_notes,
+                "discussion_messages": discussion_messages,
+                "daily_data": list(reversed(daily_data)),
+                "top_students": sorted(top_students, key=lambda s: -(s["notes"] + s["assignments"] + s["messages"]))[:5]
+            })
+
+        except Exception as e:
+            import traceback
+            print("ERROR in TeacherAnalyticsAPIView:", e)
+            traceback.print_exc()
+            return Response({"error": str(e)}, status=500)
+
+class StudentActivityHistoryAPIView(APIView):
+    def get(self, request, student_id):
+        try:
+            user = User.objects.get(id=student_id)
+        except User.DoesNotExist:
+            return Response({"error": "Student not found."}, status=404)
+
+        today = now().date()
+        results = []
+
+        for i in range(6, -1, -1):  # past 7 days
+            day = today - timedelta(days=i)
+            note_count = api_models.Note.objects.filter(user=user, date__date=day).count()
+            assignment_count = api_models.AssignmentSubmission.objects.filter(student=user, submitted_at__date=day).count()
+            results.append({
+                "date": day.strftime("%b %d"),
+                "notes": note_count,
+                "assignments": assignment_count,
+            })
+
+        return Response(results)
+    
+class AggregatedCourseContentAPIView(APIView):
+    def get(self, request):
+        notes = api_models.Note.objects.values_list("note", flat=True)
+        course_descriptions = api_models.Course.objects.values_list("description", flat=True)
+        material_titles = api_models.CourseMaterial.objects.values_list("title", flat=True)
+
+        combined = "\n\n".join(list(course_descriptions) + list(notes) + list(material_titles))
+        return Response({"content": combined})

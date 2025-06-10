@@ -404,3 +404,7 @@ class AssignmentSubmission(models.Model):
     def __str__(self):
         return f"{self.student.username} - {self.assignment.title}"
 
+class DropoutPrediction(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    score = models.FloatField()
+    predicted_at = models.DateTimeField(auto_now_add=True)

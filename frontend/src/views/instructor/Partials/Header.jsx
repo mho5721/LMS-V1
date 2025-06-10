@@ -28,14 +28,6 @@ function Header() {
                 <p className="mb-0 d-block">{profile.about}</p>
               </div>
             </div>
-            <div>
-              <a
-                href="profile-edit.html"
-                className="btn btn-primary btn-sm d-none d-md-block"
-              >
-                Account Setting <i className="fas fa-gear fa-spin"></i>
-              </a>
-            </div>
           </div>
         </div>
       </div>

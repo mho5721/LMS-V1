@@ -255,15 +255,14 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class StudentSummarySerializer(serializers.Serializer):
-    total_courses = serializers.IntegerField(default=0)
-    completed_lessons = serializers.IntegerField(default=0)
-    achieved_certificates = serializers.IntegerField(default=0)
+    active_courses = serializers.IntegerField(default=0)
+    notes_created = serializers.IntegerField(default=0)
+    assignments_submitted = serializers.IntegerField(default=0)
 
 class TeacherSummarySerializer(serializers.Serializer):
     total_courses = serializers.IntegerField(default=0)
     total_students = serializers.IntegerField(default=0)
-    total_revenue = serializers.IntegerField(default=0)
-    monthly_revenue = serializers.IntegerField(default=0)
+    at_risk_students = serializers.IntegerField(default=0)
 
 
 
@@ -315,6 +314,21 @@ class AssignmentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AssignmentSubmissionSerializer(serializers.ModelSerializer):
+    student_name = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = api_models.AssignmentSubmission
-        fields = "__all__"
+        fields = '__all__'
+
+    def get_student_name(self, obj):
+        return obj.student.get_full_name() if obj.student else ""
+
+
+class DropoutRiskInputSerializer(serializers.Serializer):
+    days_since_last_login = serializers.IntegerField()
+    assignments_submitted = serializers.IntegerField()
+    discussions_participated = serializers.IntegerField()
+    note_count = serializers.IntegerField()
+    days_enrolled = serializers.IntegerField()
+    
+

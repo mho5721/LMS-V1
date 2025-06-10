@@ -60,10 +60,6 @@ function Students() {
                                                         alt="avatar"
                                                     />
                                                     <h4 className="mb-1">{s.full_name}</h4>
-                                                    <p className="mb-0">
-                                                        {" "}
-                                                        <i className="fas fa-map-pin me-1" /> {s.country}{" "}
-                                                    </p>
                                                 </div>
                                                 <div className="d-flex justify-content-between py-2 mt-4 fs-6">
                                                     <span>Enrolled</span>

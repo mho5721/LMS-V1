@@ -39,14 +39,18 @@ import ProtectedRoute from "./views/partials/ProtectedRoute";
 import StudyGroups from "./views/student/StudyGroups";
 import StudyGroupDetail from "./views/student/StudyGroupDetail";
 import CreateStudyGroup from "./views/student/CreateStudyGroup";
+import Progress from "./views/student/Progress";
 
 import InstructorStudyGroups from "./views/instructor/InstructorStudyGroups";
 import InstructorStudyGroupDetail from "./views/instructor/InstructorStudyGroupDetail";
 import InstructorCreateStudyGroup from "./views/instructor/InstructorCreateStudyGroup";
 import InstructorCourseDetail from "./views/instructor/InstructorCourseDetail";
+import InstructorAnalytics from "./views/instructor/Analytics";
+
 
 function App() {
     const [profile, setProfile] = useState([]);
+    
 
 useEffect(() => {
 
@@ -132,6 +136,14 @@ useEffect(() => {
                             element={
                                 <ProtectedRoute allowedRole="student">
                                 <StudyGroupDetail />
+                                </ProtectedRoute>
+                            }
+                            />
+                            <Route
+                            path="/student/progress/"
+                            element={
+                                <ProtectedRoute allowedRole="student">
+                                <Progress />
                                 </ProtectedRoute>
                             }
                             />
@@ -248,6 +260,14 @@ useEffect(() => {
                             element={
                                 <ProtectedRoute allowedRole="instructor">
                                 <InstructorCourseDetail />
+                                </ProtectedRoute>
+                            }
+                        />
+                                                    <Route
+                            path="/instructor/analytics/"
+                            element={
+                                <ProtectedRoute allowedRole="instructor">
+                                <InstructorAnalytics />
                                 </ProtectedRoute>
                             }
                             />

@@ -13,7 +13,6 @@ import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import moment from "moment";
 
-import CollaborativeEditor from "./CollaborativeEditor";
 
 function CourseDetail() {
     const [course, setCourse] = useState([]);
@@ -602,14 +601,13 @@ function CourseDetail() {
                                                                                     </a>
                                                                                     
                                                                                 )}
-                                                                                {assignments.map((assignment) =>
+                                                                                {/* {assignments.map((assignment) =>
                                                                                 assignment.id ? (
                                                                                     <div key={assignment.id}>
                                                                                     <h3>{assignment.title}</h3>
-                                                                                    <CollaborativeEditor docId={`assignment-${assignment.id}`} />
                                                                                     </div>
                                                                                 ) : null
-                                                                                )}
+                                                                                )} */}
 
 
 

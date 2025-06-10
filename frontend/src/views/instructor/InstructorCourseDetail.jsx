@@ -13,6 +13,8 @@ import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import moment from "moment";
 
+import { Modal as BsModal } from "react-bootstrap";
+
 function InstructorCourseDetail() {
     const [course, setCourse] = useState([]);
     const [variantItem, setVariantItem] = useState(null);
@@ -28,6 +30,12 @@ function InstructorCourseDetail() {
     const [selectedConversation, setSelectedConversation] = useState(null);
     const [createReview, setCreateReview] = useState({ rating: 1, review: "" });
     const [studentReview, setStudentReview] = useState([]);
+
+    const [assignments, setAssignments] = useState([]);
+    const [submissions, setSubmissions] = useState([]);
+    const [newAssignment, setNewAssignment] = useState({ title: "", description: "" ,due_date: ""});
+    const [selectedAssignmentId, setSelectedAssignmentId] = useState(null);
+    const [showAssignmentModal, setShowAssignmentModal] = useState(false);
 
     const param = useParams();
     const lastElementRef = useRef();
@@ -242,6 +250,12 @@ function InstructorCourseDetail() {
         }
     }, [selectedConversation]);
 
+    useEffect(() => {
+        if (course.course?.course_id) {
+          useAxios.get(`/teacher/assignments/${course.course?.course_id}/`).then((res) => setAssignments(res.data));
+        }
+      }, [course]);
+
     const handleSearchQuestion = (event) => {
         const query = event.target.value.toLowerCase();
         if (query === "") {
@@ -253,7 +267,42 @@ function InstructorCourseDetail() {
             setQuestions(filtered);
         }
     };
-
+    
+    const handleNewAssignmentChange = (e) => {
+        setNewAssignment({ ...newAssignment, [e.target.name]: e.target.value });
+      };
+      
+      const handleCreateAssignment = async (e) => {
+        e.preventDefault();
+        try {
+            await useAxios.post(`/teacher/assignments/${course.course?.course_id}/`, {
+              title: newAssignment.title,
+              description: newAssignment.description,
+              due_date: newAssignment.due_date,
+              course: course.course?.id,
+            });
+            Toast().fire({ icon: "success", title: "Assignment created" });
+            setNewAssignment({ title: "", description: "", due_date: "" });
+            setShowAssignmentModal(false);
+            useAxios.get(`/teacher/assignments/${course.course?.course_id}/`).then((res) => setAssignments(res.data));
+          } catch (error) {
+            console.error("Assignment creation failed", error);
+            Toast().fire({ icon: "error", title: "Failed to create assignment" });
+          }
+          
+    };
+    
+    const fetchSubmissions = (assignmentId) => {
+        setSelectedAssignmentId(assignmentId);
+        useAxios.get(`/teacher/assignment-submissions/${assignmentId}/`).then((res) => setSubmissions(res.data));
+      };
+      
+      const handleGrade = (submissionId, grade) => {
+        useAxios.patch(`/teacher/grade-submission/${submissionId}/`, { grade, is_graded: true }).then(() => {
+          Toast().fire({ icon: "success", title: "Graded" });
+          fetchSubmissions(selectedAssignmentId);
+        });
+      };
 
 
     return (
@@ -304,6 +353,11 @@ function InstructorCourseDetail() {
                                                         <li className="nav-item me-2 me-sm-4" role="presentation">
                                                             <button className="nav-link mb-2 mb-md-0" id="course-pills-tab-4" data-bs-toggle="pill" data-bs-target="#course-pills-4" type="button" role="tab" aria-controls="course-pills-4" aria-selected="false">
                                                                 Study Groups
+                                                            </button>
+                                                        </li>
+                                                        <li className="nav-item me-2 me-sm-4" role="presentation">
+                                                            <button className="nav-link mb-2 mb-md-0" id="course-pills-tab-5" data-bs-toggle="pill" data-bs-target="#course-pills-5" type="button" role="tab" aria-controls="course-pills-5" aria-selected="false">
+                                                                Assignment
                                                             </button>
                                                         </li>
                                                     </ul>
@@ -535,8 +589,101 @@ function InstructorCourseDetail() {
                                                                 )}
                                                                 </div>
                                                             </div>
-                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div className="tab-pane fade" id="course-pills-5" role="tabpanel" aria-labelledby="course-pills-tab-5">
+                                                        <div className="mt-4">
+                                                        <h5>Assignments</h5>
+                                                        <button className="btn btn-primary mb-3" onClick={() => setShowAssignmentModal(true)}>
+                                                            + Create Assignment
+                                                        </button>
+                                                        <ul className="list-group">
+                                                            {assignments.map((a) => (
+                                                            <li key={a.id} className="list-group-item d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                <strong>{a.title}</strong> — {a.description}
+                                                                </div>
+                                                                <button className="btn btn-outline-secondary btn-sm" onClick={() => fetchSubmissions(a.id)}>
+                                                                View Submissions
+                                                                </button>
+                                                            </li>
+                                                            ))}
+                                                        </ul>
+                                                        </div>
 
+                                                        {selectedAssignmentId && (
+                                                        <div className="mt-4">
+                                                            <h6>Submissions for Assignment #{selectedAssignmentId}</h6>
+                                                            {submissions.length === 0 ? (
+                                                            <p>No submissions yet.</p>
+                                                            ) : (
+                                                            <table className="table">
+                                                                <thead>
+                                                                <tr>
+                                                                    <th>Student</th>
+                                                                    <th>File</th>
+                                                                    <th>Grade</th>
+                                                                    <th>Action</th>
+                                                                </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                {submissions.map((s) => (
+                                                                    <tr key={s.id}>
+                                                                    <td>{s.student}</td>
+                                                                    <td>
+                                                                    <a href={s.file} target="_blank" rel="noopener noreferrer">
+                                                                        View File
+                                                                    </a>
+                                                                    </td>
+
+                                                                    <td>{s.grade || "Ungraded"}</td>
+                                                                    <td>
+                                                                        <input
+                                                                        type="text"
+                                                                        placeholder="Grade"
+                                                                        className="form-control form-control-sm d-inline-block w-auto"
+                                                                        onBlur={(e) => handleGrade(s.id, e.target.value)}
+                                                                        />
+                                                                    </td>
+                                                                    </tr>
+                                                                ))}
+                                                                </tbody>
+                                                            </table>
+                                                            )}
+                                                        </div>
+                                                        )}
+
+                                                        <BsModal show={showAssignmentModal} onHide={() => setShowAssignmentModal(false)}>
+                                                        <BsModal.Header closeButton>
+                                                            <BsModal.Title>Create Assignment</BsModal.Title>
+                                                        </BsModal.Header>
+                                                        <BsModal.Body>
+                                                            <form onSubmit={handleCreateAssignment}>
+                                                            <div className="mb-3">
+                                                                <label>Title</label>
+                                                                <input name="title" value={newAssignment.title} onChange={handleNewAssignmentChange} className="form-control" />
+                                                            </div>
+                                                            <div className="mb-3">
+                                                                <label>Description</label>
+                                                                <textarea name="description" value={newAssignment.description} onChange={handleNewAssignmentChange} className="form-control" />
+                                                                        </div>
+                                                                        <div className="mb-3">
+                                                                        <label>Due Date</label>
+                                                                        <input
+                                                                            type="datetime-local"
+                                                                            name="due_date"
+                                                                            value={newAssignment.due_date || ""}
+                                                                            onChange={handleNewAssignmentChange}
+                                                                            className="form-control"
+                                                                            required
+                                                                        />
+                                                                        </div>
+
+                                                            <button type="submit" className="btn btn-primary">Create</button>
+                                                            </form>
+                                                        </BsModal.Body>
+                                                        </BsModal>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
