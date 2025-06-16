@@ -80,7 +80,6 @@ const handleSend = async () => {
     setIsLoading(true);
 
     try {
-      // ✅ NEW: Build a special prompt template
       const systemPrompt = `
   You are an AI learning assistant in an LMS platform.
   - You help students understand lessons and assignments.

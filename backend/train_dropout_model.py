@@ -16,6 +16,5 @@ y = df["is_dropout"]
 model = RandomForestClassifier()
 model.fit(X, y)
 
-# ✅ Overwrite the model
 joblib.dump(model, "api/ml_models/dropout_model.pkl")
 print("Model saved")
