@@ -33,3 +33,5 @@ class Command(BaseCommand):
                 ])
 
         self.stdout.write(self.style.SUCCESS("Exported dropout_data.csv"))
+
+#To run use py manage.py extract_dropout_data
