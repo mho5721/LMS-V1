@@ -196,7 +196,6 @@ function CourseCreate() {
                                     Create Course <i className="fas fa-check-circle"></i>
                                 </button>
                             </section>
-
                         </form>
                     </div>
                 </div>
