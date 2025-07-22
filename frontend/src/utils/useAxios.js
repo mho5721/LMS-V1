@@ -1,41 +1,4 @@
-// OLD CODE COMMENTED WITH EXPLANATIONS
 
-/*
-const useAxios = () => {
-    const accessToken = Cookies.get("access_token");
-    const refreshToken = Cookies.get("refresh_token");
-
-    const axiosInstance = axios.create({
-        baseURL: API_BASE_URL,
-        headers: { Authorization: `Bearer ${accessToken}` },
-    });
-
-    axiosInstance.interceptors.request.use(async (req) => {
-        if (!isAccessTokenExpired(accessToken)) {
-            // Pass the token here
-            return req;
-        }
-
-        console.log(accessToken);
-        console.log(refreshToken);
-
-        const response = await getRefreshedToken(refreshToken);
-        console.log("response.data ====", response?.data);
-        console.log("response.data?.access ====", response?.data?.access);
-
-        setAuthUser(response.data?.access, response.data?.refresh);
-        req.headers.Authorization = `Bearer ${response.data?.access}`;
-        return req;
-    });
-
-    return axiosInstance;
-};
-*/
-
-// CHANGES:
-// - Now handles both `AllowAny` and `IsAuthenticated` endpoints
-// - Doesn't send the Authorization header if the endpoint is public
-// - Checks and refreshes tokens only when necessary for authenticated endpoints
 
 import axios from "axios";
 import { setAuthUser, getRefreshToken, isAccessTokenExpired } from "./auth";

@@ -5,7 +5,7 @@ from django.utils import timezone
 
 from userauths.models import User, Profile
 from shortuuid.django_fields import ShortUUIDField
-from moviepy.editor import VideoFileClip
+from moviepy import VideoFileClip
 import math
 
 LANGUAGE = (

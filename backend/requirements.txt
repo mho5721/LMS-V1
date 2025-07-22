@@ -39,3 +39,12 @@ typing_extensions
 tzdata
 uritemplate
 urllib3
+moviepy==1.0.3
+setuptools
+joblib
+scikit-learn
+imbalanced-learn
+matplotlib
+seaborn
+numpy
+pandas

@@ -34,7 +34,7 @@ import jwt
 # Updates
 from django.core.files.storage import default_storage
 import os
-from moviepy.editor import VideoFileClip
+from moviepy import VideoFileClip
 from django.core.files.base import ContentFile
 import math
 from rest_framework.parsers import MultiPartParser, FormParser
